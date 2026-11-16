@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="GentleHealersApi.Tests/GentleHealersApi.Tests.csproj" />
+  <Project Path="GentleHealersApi/GentleHealersApi.csproj" />
+</Solution>
