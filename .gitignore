@@ -30,3 +30,6 @@ dist-ssr
 # Ignore user-specific or environment-specific appsettings files
 **/appsettings.*.json
 !appsettings.json
+
+.env
+.env.local
