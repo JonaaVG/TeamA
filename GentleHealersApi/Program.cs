@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using GentleHealersApi.Services;
 using GentleHealersApi.Services.Interfaces;
-using GentleHealersApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +45,9 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
+builder.Services.AddScoped<IPatientService, PatientService>();
+builder.Services.AddScoped<IUserService, UserService>();
 var app = builder.Build();
 
 

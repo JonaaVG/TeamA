@@ -89,7 +89,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '@/services/api';
 import { User, Lock, Eye, EyeOff, CircleAlert, ArrowRight } from 'lucide-vue-next';
 
 const router = useRouter();
@@ -111,7 +111,7 @@ const handleLogin = async () => {
   isLoading.value = true;
 
   try {
-    const response = await axios.post('/api/auth/login', {
+    const response = await api.post('/auth/login', {
       email: email.value,
       password: password.value,
     });

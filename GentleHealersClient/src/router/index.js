@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardPage from '@/views/DashboardPage.vue'
+import {parseJwt} from '@/services/JwtParser.js'
+
 // Define the routes array first
 const routes = [
   {
@@ -17,6 +19,15 @@ const routes = [
     meta: {
       auth: false,
     }
+  },
+  {
+    path: '/patient/aanmaken',
+    name: 'addpatient',
+    component: () => import('../views/Patient/AddPatientPage.vue'),
+    meta: {
+      auth: true,
+      roles: ['GeneralPractitioner']
+    }
   }
   
 ]
@@ -33,7 +44,15 @@ const router = createRouter({
   }
 })
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = !!localStorage.getItem('token') // Check if JWT token exists
+  const token = localStorage.getItem('token');
+  const isAuthenticated = !!token;
+
+  let userRole = '';
+  if (token) {
+    const decodedToken = parseJwt(token);
+    
+    userRole = decodedToken?.role || '';
+  }
 
   if (to.meta.auth && !isAuthenticated) {
     // Redirect to login if route requires authentication and user is not logged in
@@ -41,7 +60,9 @@ router.beforeEach((to, from, next) => {
   } else if (to.name === 'login' && isAuthenticated) {
     // Redirect to dashboard if user is already logged in and tries to access login
     next({ name: 'dashboard' })
-  } else {
+  } else if (to.meta.roles && !to.meta.roles.includes(userRole)) {
+    next({ name: 'dashboard' })
+  }else {
     // Allow navigation
     next()
   }
