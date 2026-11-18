@@ -1,34 +1,70 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using GentleHealersApi.Services;
+using GentleHealersApi.Services.Interfaces;
+using GentleHealersApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowVueClient", policy =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-        };
+        policy.WithOrigins("http://localhost:5173", "http://localhost:4173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
+});
+
+var jwtSettings = builder.Configuration.GetSection("Jwt");
+var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidAudience = jwtSettings["Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    };
+});
 
 builder.Services.AddAuthorization();
 
 builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddProblemDetails();
+builder.Services.AddScoped<IAuthService, AuthService>();
 var app = builder.Build();
+
+
+// using (var scope = app.Services.CreateScope())
+// {
+//     try
+//     {
+//         string adminConnectionString = "Server=localhost,1433;Database=GentleHealers;User Id=SA;Password=StrongPassword123;TrustServerCertificate=True;";
+        
+//         var seeder = new DatabaseSeeder(adminConnectionString);
+//         seeder.SeedDatabase();
+        
+//         Console.WriteLine("Database seeding is succesvol voltooid!");
+//     }
+//     catch (Exception ex)
+//     {
+//         Console.WriteLine($"Fout tijdens het seeden van de database: {ex.Message}");
+//     }
+// }
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -37,6 +73,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowVueClient");
 
 app.UseAuthentication();
 app.UseAuthorization();

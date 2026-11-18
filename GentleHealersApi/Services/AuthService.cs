@@ -26,20 +26,23 @@ namespace GentleHealersApi.Services
             _connectionString = configuration.GetConnectionString("DefaultConnection")!;
         }
         /// <summary>
-        /// Authenticates a user based on their username and password, verifying credentials against the database and returning a JWT token if valid.
+        /// Authenticates a user based on their email and password, verifying credentials against the database and returning a JWT token if valid.
         /// </summary>
         /// <param name="email">The email of the user attempting to log in.</param>
         /// <param name="password">The plaintext password provided by the user.</param>
         /// <returns>A JWT token string if authentication succeeds; otherwise, null.</returns>
         public async Task<string?> AuthenticateUserAsync(string email, string password)
         {
-            // 1. Verify user in database via Stored Procedure
+            // 1. Verify user in database via direct SQL query
             using var connection = new SqlConnection(_connectionString);
-            using var command = new SqlCommand("sp_VerifyUserLogin", connection)
-            {
-                CommandType = CommandType.StoredProcedure
-            };
 
+            var sqlQuery = @"
+                SELECT u.UserId, r.Name AS Role, u.PasswordHash 
+                FROM dbo.AppUser u 
+                INNER JOIN dbo.Role r ON u.RoleId = r.RoleId 
+                WHERE u.Email = @Email";
+
+            using var command = new SqlCommand(sqlQuery, connection);
             command.Parameters.AddWithValue("@Email", email);
 
             await connection.OpenAsync();
@@ -71,7 +74,7 @@ namespace GentleHealersApi.Services
         /// <param name="userId">The unique ID of the user.</param>
         /// <param name="email">The email of the user.</param>
         /// <param name="role">The security role assigned to the user.</param>
-        /// .<returns>The serialized JWT token string.</returns>
+        /// <returns>The serialized JWT token string.</returns>
         private string GenerateJwtToken(int userId, string email, string role)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
