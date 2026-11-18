@@ -23,7 +23,13 @@ namespace GentleHealersApi.Controllers
             return Ok(await _roleService.GetAllRolesAsync());
         }
 
-        [HttpPut("users/{userId:int}/role")]
+        [HttpGet("users")]
+        public async Task<ActionResult<List<UserRoleDto>>> GetUsers()
+        {
+            return Ok(await _roleService.GetAllUsersAsync());
+        }
+
+        [HttpPut("user/{userId:int}/role")]
         public async Task<IActionResult> ChangeUserRole(
             int userId,
             [FromBody] RoleDto request)

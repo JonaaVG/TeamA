@@ -17,8 +17,16 @@ const routes = [
     meta: {
       auth: false,
     }
+  },
+
+  {
+    path: '/rolManagement',
+    name: 'rolManagement',
+    component: () => import('../views/RolemanagementPage.vue'),
+    meta: {
+      auth: true,
+    }
   }
-  
 ]
 
 const router = createRouter({

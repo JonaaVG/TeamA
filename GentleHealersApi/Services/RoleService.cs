@@ -38,6 +38,40 @@ namespace GentleHealersApi.Services
             return roles;
         }
 
+        public async Task<List<UserRoleDto>> GetAllUsersAsync()
+        {
+            var users = new List<UserRoleDto>();
+
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            const string sql = """
+        SELECT u.UserId, u.FirstName, u.LastName, u.Email,
+               r.RoleId, r.Name AS RoleName
+        FROM dbo.AppUser AS u
+        INNER JOIN dbo.Role AS r ON r.RoleId = u.RoleId
+        ORDER BY u.LastName, u.FirstName;
+        """;
+
+            await using var command = new SqlCommand(sql, connection);
+            await using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                users.Add(new UserRoleDto
+                {
+                    UserId = reader.GetInt32(reader.GetOrdinal("UserId")),
+                    FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                    LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                    Email = reader.GetString(reader.GetOrdinal("Email")),
+                    RoleId = reader.GetInt32(reader.GetOrdinal("RoleId")),
+                    RoleName = reader.GetString(reader.GetOrdinal("RoleName"))
+                });
+            }
+
+            return users;
+        }
+
         public async Task<bool> ChangeRoleAsync(int userId, int roleId)
         {
             await using var connection = new SqlConnection(_connectionString);

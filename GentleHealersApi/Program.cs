@@ -47,6 +47,7 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("DefaultConnection ontbreekt.");
