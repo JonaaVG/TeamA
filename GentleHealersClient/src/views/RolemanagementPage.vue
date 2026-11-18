@@ -10,14 +10,42 @@
       <button class="logout" aria-label="Uitloggen">↪</button>
     </header>
 
-    <main class="content">
-      <h1>Rollen en rechten</h1>
+    <div class="content">
+      <h1 id="page-title" tabindex="-1">Rollen en rechten</h1>
       <p class="intro">Wijzig de rol van een bestaand gebruikersaccount.</p>
 
-      <p v-if="successMessage" class="message success">{{ successMessage }}</p>
-      <p v-if="errorMessage" class="message error">{{ errorMessage }}</p>
+      <p
+        class="message success"
+        :class="{ 'message-empty': !successMessage }"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {{ successMessage }}
+      </p>
+      <p
+        class="message error"
+        :class="{ 'message-empty': !errorMessage }"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true"
+      >
+        {{ errorMessage }}
+      </p>
 
-      <section class="user-list">
+      <div class="search-bar">
+        <label for="user-search">Zoek gebruiker op naam</label>
+        <input
+          id="user-search"
+          v-model="searchQuery"
+          type="search"
+          placeholder="Typ een voor- of achternaam"
+          autocomplete="off"
+        />
+      </div>
+
+      <section class="user-list" aria-labelledby="users-heading">
+        <h2 id="users-heading" class="visually-hidden">Gebruikers en huidige rollen</h2>
         <div class="list-heading">
           <span>Gebruiker</span>
           <span>Huidige rol</span>
@@ -25,13 +53,13 @@
           <span></span>
         </div>
 
-        <div v-for="user in users" :key="user.email" class="user-row">
+        <div v-for="user in filteredUsers" :key="user.email" class="user-row">
           <div class="user-info">
             <span>{{ user.firstName }} {{ user.lastName }}</span>
             <span>{{ user.email }}</span>
           </div>
 
-          <select v-model="user.roleId" :aria-label="`Rol voor ${user.firstName}`">
+          <select v-model="user.roleId" :aria-label="`Rol voor ${user.firstName} ${user.lastName}`">
           <option v-for="role in roles" :key="role.roleId" :value="role.roleId">
             {{ role.name }}
           </option>
@@ -39,27 +67,53 @@
 
         <button
           class="button button-primary"
+          :aria-label="`Rol wijzigen voor ${user.firstName} ${user.lastName}`"
           @click="changeRole(user)"
         >
           Rol wijzigen
         </button>
-          <button class="button button-danger" @click="revokeAccess(user)">
+          <button
+            class="button button-danger"
+            :aria-label="`Rechten intrekken voor ${user.firstName} ${user.lastName}`"
+            @click="revokeAccess(user)"
+          >
             Rechten intrekken
           </button>
         </div>
+
+        <p v-if="filteredUsers.length === 0" class="empty-state">
+          {{ searchQuery.trim() ? 'Geen gebruikers gevonden met deze naam.' : 'Er zijn geen gebruikers beschikbaar.' }}
+        </p>
       </section>
-    </main>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import api from '@/services/api'
 
 const roles = ref([])
 const users = ref([])
+const searchQuery = ref('')
 const errorMessage = ref('')
 const successMessage = ref('')
+
+const filteredUsers = computed(() => {
+  const query = normalizeName(searchQuery.value.trim())
+  if (!query) return users.value
+
+  return users.value.filter((user) =>
+    normalizeName(`${user.firstName ?? ''} ${user.lastName ?? ''}`).includes(query),
+  )
+})
+
+function normalizeName(value) {
+  return value
+    .toLocaleLowerCase('nl')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
 
 onMounted(async () => {
   try {
@@ -71,7 +125,7 @@ onMounted(async () => {
     roles.value = rolesResponse.data
     users.value = usersResponse.data
   } catch (error) {
-    errorMessage.value = 'De gebruikers of rollen konden niet worden geladen.'
+    errorMessage.value = 'De gebruikers of rollen konden niet worden geladen. Controleer je verbinding en vernieuw de pagina.'
     console.error(error)
   }
 })
@@ -89,7 +143,7 @@ async function changeRole(user) {
   `De rol van ${user.firstName} ${user.lastName} is succesvol gewijzigd.` 
   } catch (error) {
     errorMessage.value =
-      error.response?.data || 'De rol kon niet worden gewijzigd.'
+      error.response?.data || 'De rol kon niet worden gewijzigd. Probeer het opnieuw.'
     console.error(error)
   }
 }
@@ -180,11 +234,57 @@ h1 {
   font-size: 10px;
 }
 
+.search-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 420px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.search-bar input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid #bdcde0;
+  border-radius: 8px;
+  background: white;
+  color: #153b70;
+  font: inherit;
+  font-weight: 400;
+}
+
+.search-bar input:focus {
+  outline: 2px solid #1681d2;
+  outline-offset: 2px;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 18px 12px;
+  color: #526b89;
+  font-size: 12px;
+}
+
 .user-list {
   overflow: hidden;
   background: #fff;
   border: 1px solid #bdcde0;
   border-radius: 8px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .list-heading,
@@ -256,6 +356,11 @@ select {
   border-radius: 6px;
 }
 
+.message-empty {
+  margin: 0;
+  padding: 0;
+}
+
 .success {
   color: #166534;
   background: #dcfce7;
@@ -279,15 +384,25 @@ select {
     display: none;
   }
 
-  .list-heading,
-  .user-row {
-    grid-template-columns: 1fr 1.2fr;
-    gap: 8px;
-    padding: 8px;
+  .list-heading {
+    display: none;
   }
 
-  .list-heading span:nth-child(n + 3) {
-    display: none;
+  .user-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .user-info {
+    overflow-wrap: anywhere;
+    font-size: 14px;
+  }
+
+  select,
+  .button {
+    min-height: 40px;
+    font-size: 14px;
   }
 }
 </style>
