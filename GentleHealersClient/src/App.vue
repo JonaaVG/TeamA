@@ -106,7 +106,7 @@ const roleMenuSections = computed(() => {
     SystemAdministrator: [
       {
         label: 'Gebruikersbeheer',
-        items: [{ label: 'Rollen en rechten', to: '/rolManagement' }],
+        items: [{ label: 'Rollen en rechten', to: '/rol/management' }],
       },
     ],
     GeneralPractitioner: [

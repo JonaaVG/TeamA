@@ -31,9 +31,9 @@ const routes = [
   },
 
   {
-    path: '/rolManagement',
+    path: '/rol/management',
     name: 'rolManagement',
-    component: () => import('../views/RolemanagementPage.vue'),
+    component: () => import('../views/Systemadministrator/RolemanagementPage.vue'),
     meta: {
       auth: true,
       roles: ['SystemAdministrator'],

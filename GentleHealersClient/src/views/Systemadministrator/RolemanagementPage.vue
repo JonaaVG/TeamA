@@ -150,15 +150,19 @@ onMounted(async () => {
 async function changeRole(user) {
   successMessage.value = ''
   errorMessage.value = ''
+  const previousRoleId = roles.value.find((role) => role.name === user.roleName)?.roleId
 
   try {
     await api.put(`/admin/roles/user/${user.userId}/role`, {
       roleId: user.roleId,
     })
 
+    user.roleName = roles.value.find((role) => role.roleId === user.roleId)?.name ?? user.roleName
+
     successMessage.value =
   `De rol van ${user.firstName} ${user.lastName} is succesvol gewijzigd.` 
   } catch (error) {
+    if (previousRoleId !== undefined) user.roleId = previousRoleId
     errorMessage.value =
       error.response?.data || 'De rol kon niet worden gewijzigd. Probeer het opnieuw.'
     console.error(error)
