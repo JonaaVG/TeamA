@@ -11,9 +11,13 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
-      vueDevTools(),
+      // vueDevTools(),
       tailwindcss(),
     ],
+    test: {
+      environment: 'jsdom',
+      globals: true,
+    },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
