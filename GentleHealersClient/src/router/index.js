@@ -28,8 +28,6 @@ const routes = [
       auth: true,
       roles: ['GeneralPractitioner']
     }
-  }
-  
   },
 
   {
@@ -79,7 +77,7 @@ router.beforeEach((to, from, next) => {
     // Redirect to dashboard if user is already logged in and tries to access login
     next({ name: 'dashboard' })
   } else if (to.meta.roles && !to.meta.roles.includes(userRole)) {
-    next({ name: 'dashboard' })
+    next({ name: 'accessDenied' })
   }else {
     // Allow navigation
     next()
