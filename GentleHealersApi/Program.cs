@@ -4,7 +4,6 @@ using Microsoft.IdentityModel.Tokens;
 using GentleHealersApi.Services;
 using GentleHealersApi.Services.Interfaces;
 using GentleHealersApi.Data;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,10 +48,6 @@ builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("DefaultConnection ontbreekt.");
-builder.Services.AddDbContext<GentleHealersDbContext>(options =>
-    options.UseSqlServer(connectionString));
 var app = builder.Build();
 
 

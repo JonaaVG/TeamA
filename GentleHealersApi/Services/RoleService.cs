@@ -1,6 +1,7 @@
 ﻿using GentleHealersApi.DTOs;
 using GentleHealersApi.Services.Interfaces;
 using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace GentleHealersApi.Services
 {
@@ -47,7 +48,7 @@ namespace GentleHealersApi.Services
 
             const string sql = """
         SELECT u.UserId, u.FirstName, u.LastName, u.Email,
-               r.RoleId, r.Name AS RoleName
+        r.RoleId, r.Name AS RoleName, u.Status
         FROM dbo.AppUser AS u
         INNER JOIN dbo.Role AS r ON r.RoleId = u.RoleId
         ORDER BY u.LastName, u.FirstName;
@@ -65,7 +66,8 @@ namespace GentleHealersApi.Services
                     LastName = reader.GetString(reader.GetOrdinal("LastName")),
                     Email = reader.GetString(reader.GetOrdinal("Email")),
                     RoleId = reader.GetInt32(reader.GetOrdinal("RoleId")),
-                    RoleName = reader.GetString(reader.GetOrdinal("RoleName"))
+                    RoleName = reader.GetString(reader.GetOrdinal("RoleName")),
+                    Status = reader.GetString(reader.GetOrdinal("Status"))
                 });
             }
 
@@ -91,6 +93,23 @@ namespace GentleHealersApi.Services
             await using var command = new SqlCommand(sql, connection);
             command.Parameters.AddWithValue("@UserId", userId);
             command.Parameters.AddWithValue("@RoleId", roleId);
+
+            return await command.ExecuteNonQueryAsync() > 0;
+        }
+
+        public async Task<bool> DeactivateUserAsync(int userId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            const string sql = """
+        UPDATE dbo.AppUser
+        SET Status = N'Inactive'
+        WHERE UserId = @UserId;
+        """;
+
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
 
             return await command.ExecuteNonQueryAsync() > 0;
         }

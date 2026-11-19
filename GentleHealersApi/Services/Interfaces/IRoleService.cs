@@ -6,5 +6,6 @@ namespace GentleHealersApi.Services.Interfaces
         Task<List<RoleDto>> GetAllRolesAsync();
         Task<List<UserRoleDto>> GetAllUsersAsync();
         Task<bool> ChangeRoleAsync(int userId, int roleId);
+        Task<bool> DeactivateUserAsync(int userId);
     }
 }

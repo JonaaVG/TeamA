@@ -43,5 +43,18 @@ namespace GentleHealersApi.Controllers
 
             return Ok("Rol succesvol gewijzigd.");
         }
+
+        [HttpPut("user/{userId:int}/deactivate")]
+        public async Task<IActionResult> DeactivateUser(int userId)
+        {
+            bool deactivated = await _roleService.DeactivateUserAsync(userId);
+
+            if (!deactivated)
+            {
+                return NotFound("Gebruiker niet gevonden.");
+            }
+
+            return Ok("Account gedeactiveerd.");
+        }
     }
 }
