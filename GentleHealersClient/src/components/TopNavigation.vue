@@ -29,14 +29,17 @@
           ref="profileTrigger"
           class="profile-trigger"
           type="button"
-          :aria-label="`Profielmenu openen voor ${props.profileName}`"
+          :aria-label="`Profielmenu openen voor ${props.profileName}, rol ${props.profileRole}`"
           aria-controls="profile-panel"
           :aria-expanded="profileOpen"
           @click="toggleProfile"
         >
           <span class="profile-summary">
             <slot name="profile-summary">
-              {{ props.profileName }}
+              <span class="profile-name">{{ props.profileName }}</span>
+              <span v-if="props.profileRole" class="profile-role">
+                {{ props.profileRole }}
+              </span>
             </slot>
           </span>
           <span class="profile-chevron" aria-hidden="true">⌄</span>
@@ -119,6 +122,7 @@ import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 const props = defineProps({
   profileName: { type: String, default: 'Naam' },
+  profileRole: { type: String, default: '' },
 })
 
 const emit = defineEmits(['logout'])
@@ -247,9 +251,26 @@ onUnmounted(() => window.removeEventListener('keydown', handleEscape))
 }
 
 .profile-summary {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
+}
+
+.profile-name,
+.profile-role {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-role {
+  font-size: 11px;
+  font-weight: 400;
 }
 
 .profile-chevron {

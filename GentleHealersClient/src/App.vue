@@ -12,6 +12,7 @@
     <TopNavigation
       v-if="showNavigation"
       :profile-name="profileName"
+      :profile-role="profileRole"
       @logout="handleLogout"
     >
       <template #menu="{ close }">
@@ -44,7 +45,10 @@
 
       <template #profile-panel="{ logout }">
         <div class="profile-details">
-          <p>{{ profileName }}</p>
+          <p class="profile-identity">
+            <span>{{ profileName }}</span>
+            <span class="profile-identity-role">{{ profileRole }}</span>
+          </p>
           <button type="button" class="profile-logout" @click="logout">
             Uitloggen
           </button>
@@ -74,6 +78,19 @@ const claims = computed(() => {
 })
 
 const userRole = computed(() => claims.value?.role ?? '')
+const profileRole = computed(() => {
+  const labels = {
+    Patient: 'Patiënt',
+    GeneralPractitioner: 'Huisarts',
+    Specialist: 'Specialist',
+    Nurse: 'Verpleegkundige',
+    AdministrativeStaff: 'Administratief medewerker',
+    SystemAdministrator: 'Systeembeheerder',
+    HealthInsurer: 'Zorgverzekeraar',
+  }
+
+  return labels[userRole.value] ?? userRole.value
+})
 const profileName = computed(() => {
   const firstName = claims.value?.firstName ?? claims.value?.given_name
   const lastName = claims.value?.lastName ?? claims.value?.family_name
@@ -144,6 +161,17 @@ function focusPageTitle() {
 .profile-details p {
   margin: 8px 0 16px;
   font-size: 14px;
+}
+
+.profile-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-identity-role {
+  color: #153b70;
+  font-size: 12px;
 }
 
 .profile-logout {
