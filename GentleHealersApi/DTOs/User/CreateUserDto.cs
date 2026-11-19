@@ -13,6 +13,6 @@ namespace GentleHealersApi.DTOs.User
         public string Email { get; set; } = "";
 
         [Required]
-        public string RoleName { get; set; }= "GeneralPractitioner";
+        public string RoleName { get; set; }= "Patient";
     }
 }
