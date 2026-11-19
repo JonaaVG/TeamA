@@ -1,113 +1,170 @@
 <template>
-  <div id="focus-resetter" tabindex="-1" aria-hidden="true"></div>
-  <div class="min-h-screen bg-gray-50 text-gray-900 font-sans flex flex-col justify-between">
-    <!-- Skip link for keyboard and screen reader users -->
-    <a id="skip-link" href="#page-title" @click.prevent="skipToMain"
-      class="skip-link focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:text-blue-900 focus:px-4 focus:py-3 focus:rounded-lg focus:shadow-xl focus:border-2 focus:border-blue-900 focus:font-semibold">
-      Ga direct naar hoofdinhoud
+  <div class="app-shell">
+    <a
+      v-if="showNavigation"
+      class="skip-link"
+      href="#page-title"
+      @click.prevent="focusPageTitle"
+    >
+      Ga naar de hoofdinhoud
     </a>
 
-    <div>
-      <!-- Global Header & Main Navigation -->
-      <header class="bg-blue-900 text-white shadow-md" role="banner">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div class="flex items-center space-x-3">
-            <span class="text-2xl" aria-hidden="true">🏥</span>
-            <span class="text-xl font-bold tracking-wide">De Zachte Heelmeesters</span>
+    <TopNavigation
+      v-if="showNavigation"
+      :profile-name="profileName"
+      @logout="handleLogout"
+    >
+      <template #menu="{ close }">
+        <RouterLink class="nav-menu-link" to="/" @click="close">
+          <span>Home</span>
+          <svg class="nav-home-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M12 3 2 11.5h3V21h6v-6h2v6h6v-9.5h3L12 3z" />
+          </svg>
+        </RouterLink>
+
+        <details
+          v-for="section in roleMenuSections"
+          :key="section.label"
+          class="nav-menu-group"
+        >
+          <summary>{{ section.label }}</summary>
+          <div class="nav-submenu">
+            <RouterLink
+              v-for="item in section.items"
+              :key="item.to"
+              class="nav-menu-link"
+              :to="item.to"
+              @click="close"
+            >
+              {{ item.label }}
+            </RouterLink>
           </div>
+        </details>
+      </template>
 
-          <nav aria-label="Hoofdnavigatie">
-            <ul class="flex flex-wrap items-center justify-center gap-2 md:gap-3 list-none p-0 m-0">
-              <li>
-                <router-link to="/"
-                  class="px-3.5 py-2 rounded-md font-medium text-blue-100 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-white"
-                  active-class="bg-blue-800 text-white ring-2 ring-white/50">
-                  Dashboard
-                </router-link>
-              </li>
-              
-
-              <!-- Logout Knop -->
-              <li>
-                <button 
-                  @click="handleLogout"
-                  class="px-3.5 py-2 rounded-md font-medium text-blue-100 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-white transition-colors cursor-pointer"
-                  aria-label="Uitloggen uit de applicatie">
-                  Uitloggen
-                </button>
-              </li>
-            </ul>
-          </nav>
+      <template #profile-panel="{ logout }">
+        <div class="profile-details">
+          <p>{{ profileName }}</p>
+          <button type="button" class="profile-logout" @click="logout">
+            Uitloggen
+          </button>
         </div>
-      </header>
+      </template>
+    </TopNavigation>
 
-      <!-- Dynamic page content -->
-      <main id="main-content" class="max-w-7xl mx-auto px-4 py-8" tabindex="-1">
-        <RouterView />
-      </main>
-    </div>
-
-    <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 py-6 text-center text-sm text-gray-600 mt-12" role="contentinfo">
-      <p>&copy; 2026 De Zachte Heelmeesters</p>
-    </footer>
+    <RouterView />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import TopNavigation from '@/components/TopNavigation.vue'
+import { parseJwt } from '@/services/JwtParser.js'
 
+const route = useRoute()
 const router = useRouter()
 
-// Logout - deletes stored data and sends user to login
-const handleLogout = () => {
+const claims = computed(() => {
+  const currentPath = route.fullPath
+  const token = localStorage.getItem('token')
+  // Depend on route changes so a newly stored token is picked up after login.
+  if (!token || !currentPath) return null
+  return parseJwt(token)
+})
+
+const userRole = computed(() => claims.value?.role ?? '')
+const profileName = computed(() => {
+  const firstName = claims.value?.firstName ?? claims.value?.given_name
+  const lastName = claims.value?.lastName ?? claims.value?.family_name
+  const fullName = [firstName, lastName].filter(Boolean).join(' ')
+
+  // Current JWTs contain email but not first/last name, so use email until
+  // the API includes name claims or provides a current-user endpoint.
+  return fullName || claims.value?.email || 'Gebruiker'
+})
+
+const roleMenuSections = computed(() => {
+  const menus = {
+    SystemAdministrator: [
+      {
+        label: 'Gebruikersbeheer',
+        items: [{ label: 'Rollen en rechten', to: '/rolManagement' }],
+      },
+    ],
+    GeneralPractitioner: [
+      {
+        label: 'Patiënten',
+        items: [{ label: 'Patiënt toevoegen', to: '/patient/aanmaken' }],
+      },
+    ],
+  }
+
+  return menus[userRole.value] ?? []
+})
+
+const showNavigation = computed(() =>
+  Boolean(claims.value) && !['login', 'accessDenied'].includes(route.name),
+)
+
+function handleLogout() {
   localStorage.removeItem('token')
   localStorage.removeItem('userRole')
-  router.push('/login')
+  router.push({ name: 'login' })
 }
-// Function to smoothly and reliably force focus to the main content area
-const skipToMain = () => {
-  const pageTitle = document.getElementById('page-title')
-  if (pageTitle) {
-    // Geef altijd direct de focus
-    pageTitle.focus()
 
-    // Controleer of het element al volledig binnen de huidige viewport (het zichtbare scherm) valt
-    const rect = pageTitle.getBoundingClientRect()
-    const isVisible =
-      rect.top >= 0 &&
-      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
-
-    // Alleen automatisch scrollen als de titel NIET in beeld is
-    if (!isVisible) {
-      pageTitle.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }
+function focusPageTitle() {
+  document.getElementById('page-title')?.focus()
 }
 </script>
 
-<style>
-/* De skip-link wordt standaard volledig naar boven geduwd buiten het zicht */
-.skip-link {
-  position: fixed;
-  top: 0;
-  left: 16px;
-  transform: translateY(-100%);
-  background: #ffffff;
-  color: #1e3a8a;
-  padding: 12px 16px;
-  z-index: 99999;
-  border-radius: 0 0 8px 8px;
-  font-weight: 600;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  border: 2px solid #1e3a8a;
-  transition: transform 0.2s ease-in-out;
+<style scoped>
+.app-shell {
+  min-height: 100vh;
+  background: #eaf3fc;
 }
 
-/* Zodra hij focus krijgt (via Tab), schiet hij naar beneden in beeld */
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 8px;
+  left: 8px;
+  transform: translateY(-150%);
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: white;
+  color: #153b70;
+  font-weight: 700;
+}
+
 .skip-link:focus {
   transform: translateY(0);
-  outline: none;
+}
+
+.profile-details p {
+  margin: 8px 0 16px;
+  font-size: 14px;
+}
+
+.profile-logout {
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: #0878d1;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+
+.profile-logout:focus-visible {
+  outline: 3px solid #153b70;
+  outline-offset: 3px;
+}
+
+.nav-home-icon {
+  width: 24px;
+  height: 24px;
+  fill: #153b70;
 }
 </style>

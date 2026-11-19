@@ -1,15 +1,5 @@
 <template>
   <div class="app">
-    <header class="topbar">
-      <button class="menu-button" aria-label="Menu">☰ <span>Menu</span></button>
-      <div class="brand">Zachte <strong>Heelmeesters</strong></div>
-      <button class="profile">
-        <span>Naam<br />nummer<br />geboortedatum</span>
-        <span>⌄</span>
-      </button>
-      <button class="logout" aria-label="Uitloggen">↪</button>
-    </header>
-
     <div class="content">
       <h1 id="page-title" tabindex="-1">Rollen en rechten</h1>
       <p class="intro">Wijzig de rol van een bestaand gebruikersaccount.</p>
@@ -213,63 +203,6 @@ async function toggleAccountStatus(user) {
   font-family: Arial, sans-serif;
 }
 
-.topbar {
-  height: 59px;
-  display: flex;
-  align-items: center;
-  background: #fff;
-  border: 1px solid #c4d1e0;
-}
-
-.menu-button,
-.logout,
-.profile {
-  height: 100%;
-  border: 0;
-  background: transparent;
-  color: #153b70;
-}
-
-.menu-button {
-  width: 25%;
-  padding: 0 14px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 17px;
-  font-weight: 700;
-  text-align: left;
-}
-
-.brand {
-  flex: 1;
-  text-align: center;
-  font-size: 17px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.brand strong {
-  color: #1681d2;
-}
-
-.profile {
-  width: 29%;
-  padding: 7px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-left: 1px solid #c4d1e0;
-  border-right: 1px solid #c4d1e0;
-  font-size: 9px;
-  text-align: left;
-}
-
-.logout {
-  width: 50px;
-  font-size: 27px;
-}
-
 .content {
   padding: 20px 11px;
 }
@@ -452,18 +385,6 @@ select {
 }
 
 @media (max-width: 600px) {
-  .menu-button {
-    width: auto;
-  }
-
-  .brand {
-    font-size: 14px;
-  }
-
-  .profile {
-    display: none;
-  }
-
   .list-heading {
     display: none;
   }
