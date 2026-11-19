@@ -49,6 +49,7 @@
         <div class="list-heading">
           <span>Gebruiker</span>
           <span>Huidige rol</span>
+          <span>Accountstatus</span>
           <span></span>
           <span></span>
         </div>
@@ -65,6 +66,13 @@
           </option>
         </select>
 
+        <span
+          class="status-badge"
+          :class="`status-${user.status?.toLowerCase()}`"
+        >
+          {{ statusLabel(user.status) }}
+        </span>
+
         <button
           class="button button-primary"
           :aria-label="`Rol wijzigen voor ${user.firstName} ${user.lastName}`"
@@ -73,11 +81,18 @@
           Rol wijzigen
         </button>
           <button
-            class="button button-danger"
-            :aria-label="`Rechten intrekken voor ${user.firstName} ${user.lastName}`"
-            @click="revokeAccess(user)"
+            class="button"
+            :class="user.status === 'Active' ? 'button-danger' : 'button-primary'"
+            :disabled="updatingUserId === user.userId"
+            @click="toggleAccountStatus(user)"
           >
-            Rechten intrekken
+            {{
+              updatingUserId === user.userId
+                ? 'Bezig...'
+                : user.status === 'Active'
+                  ? 'Account deactiveren'
+                  : 'Account activeren'
+            }}
           </button>
         </div>
 
@@ -98,6 +113,7 @@ const users = ref([])
 const searchQuery = ref('')
 const errorMessage = ref('')
 const successMessage = ref('')
+const updatingUserId = ref(null)
 
 const filteredUsers = computed(() => {
   const query = normalizeName(searchQuery.value.trim())
@@ -107,6 +123,17 @@ const filteredUsers = computed(() => {
     normalizeName(`${user.firstName ?? ''} ${user.lastName ?? ''}`).includes(query),
   )
 })
+
+function statusLabel(status) {
+  const labels = {
+    Active: 'Actief',
+    Inactive: 'Inactief',
+    Blocked: 'Geblokkeerd',
+    Invited: 'Uitgenodigd',
+  }
+
+  return labels[status] ?? status ?? 'Onbekend'
+}
 
 function normalizeName(value) {
   return value
@@ -145,6 +172,29 @@ async function changeRole(user) {
     errorMessage.value =
       error.response?.data || 'De rol kon niet worden gewijzigd. Probeer het opnieuw.'
     console.error(error)
+  }
+}
+
+async function toggleAccountStatus(user) {
+  successMessage.value = ''
+  errorMessage.value = ''
+
+  const isActive = user.status === 'Active'
+  const action = isActive ? 'deactivate' : 'activate'
+  updatingUserId.value = user.userId
+
+  try {
+    await api.put(`/admin/roles/user/${user.userId}/${action}`)
+
+    user.status = isActive ? 'Inactive' : 'Active'
+    successMessage.value = isActive
+      ? `Het account van ${user.firstName} ${user.lastName} is gedeactiveerd.`
+      : `Het account van ${user.firstName} ${user.lastName} is geactiveerd.`
+  } catch (error) {
+    errorMessage.value =
+      error.response?.data || 'De accountstatus kon niet worden gewijzigd.'
+  } finally {
+    updatingUserId.value = null
   }
 }
 </script>
@@ -290,10 +340,10 @@ h1 {
 .list-heading,
 .user-row {
   display: grid;
-  grid-template-columns: 1.1fr 1.7fr 1fr 1fr;
+  grid-template-columns: 1.2fr 1.4fr 0.9fr 1fr 1fr;
   align-items: center;
   column-gap: 16px;
-  padding: 0 4px;
+  padding: 0 8px;
 }
 
 .list-heading {
@@ -369,6 +419,36 @@ select {
 .error {
   color: #991b1b;
   background: #fee2e2;
+}
+
+.status-badge {
+  display: inline-block;
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-inactive,
+.status-blocked {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-invited {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 @media (max-width: 600px) {

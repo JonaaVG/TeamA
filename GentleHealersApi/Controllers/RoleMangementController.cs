@@ -56,5 +56,18 @@ namespace GentleHealersApi.Controllers
 
             return Ok("Account gedeactiveerd.");
         }
+
+        [HttpPut("user/{userId:int}/activate")]
+        public async Task<IActionResult> ActivateUser(int userId)
+        {
+            bool activated = await _roleService.ActivateUserAsync(userId);
+
+            if (!activated)
+            {
+                return NotFound("Gebruiker niet gevonden.");
+            }
+
+            return Ok("Account geactiveerd.");
+        }
     }
 }

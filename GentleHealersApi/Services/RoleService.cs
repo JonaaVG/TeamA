@@ -113,5 +113,22 @@ namespace GentleHealersApi.Services
 
             return await command.ExecuteNonQueryAsync() > 0;
         }
+
+        public async Task<bool> ActivateUserAsync(int userId)
+        {
+            await using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            const string sql = """
+        UPDATE dbo.AppUser
+        SET Status = N'Active'
+        WHERE UserId = @UserId;
+        """;
+
+            await using var command = new SqlCommand(sql, connection);
+            command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+
+            return await command.ExecuteNonQueryAsync() > 0;
+        }
     }
 }
