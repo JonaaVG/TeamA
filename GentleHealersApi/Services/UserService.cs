@@ -98,5 +98,17 @@ namespace GentleHealersApi.Services
                 throw;
             }
         }
+
+        //public async Task<bool> ValidateActivationTokenAsync(string email, string token)
+        //{
+        //    var tokenHash = TokenHelper.HashToken(token);
+        //    using var connection = await _connectionFactory.GetConnectionAsync();
+        //    var query = @"
+        //        SELECT ut.TokenHash
+        //        FROM dbo.UserToken ut
+        //        JOIN dbo.AppUser au ON ut.UserId = au.UserId
+        //        WHERE au.Email = @Email AND ut.Type = 'Inactive'";
+
+        //}
     }
 }

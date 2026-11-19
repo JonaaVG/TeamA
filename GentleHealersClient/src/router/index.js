@@ -28,7 +28,15 @@ const routes = [
       auth: true,
       roles: ['GeneralPractitioner']
     }
-  }
+  },
+  {
+    path: '/activeer',
+    name: 'setuppassword',
+    component: () => import('../views/Patient/SetUpPasswordPage.vue'),
+    meta: {
+      auth: false
+    }
+  },
   
 ]
 
