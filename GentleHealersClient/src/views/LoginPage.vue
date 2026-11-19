@@ -121,7 +121,7 @@ const handleLogin = async () => {
   } catch (error) {
     errorMessage.value =
       error.response?.data?.message ||
-      'Inloggegevens onjuist. Controleer je E-mailadres en wachtwoord.';
+      'Inloggegevens onjuist of account is niet actief. Controleer je E-mailadres en wachtwoord.';
   } finally {
     isLoading.value = false;
   }
