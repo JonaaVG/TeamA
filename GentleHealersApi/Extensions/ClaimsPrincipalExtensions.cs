@@ -25,5 +25,21 @@ namespace GentleHealersApi.Extensions
 
             return userId;
         }
+
+        /// <summary>
+        /// Extracts the user role from the claims principal.
+        /// </summary>
+        public static string GetUserRoleFromClaims(this ClaimsPrincipal user)
+        {
+            var roleClaim = user.FindFirst(ClaimTypes.Role)?.Value 
+                            ?? user.FindFirst("role")?.Value;
+
+            if (string.IsNullOrEmpty(roleClaim))
+            {
+                throw new UnauthorizedAccessException("Missing user role claim.");
+            }
+
+            return roleClaim;
+        }
     }
 }
