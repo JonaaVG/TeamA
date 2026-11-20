@@ -70,4 +70,32 @@ public class EmailTemplatesTests
     [TestMethod]
     public void Build_UnknownType_Throws()
         => Assert.Throws<ArgumentOutOfRangeException>(() => EmailTemplates.Build(Request((EmailType)999)));
+
+    // Extra tests to add to EmailTemplatesTests
+
+    [TestMethod]
+    public void PasswordReset_HtmlEncodesAmpersandInLink()
+    {
+        var (_, html, text) = EmailTemplates.Build(Request(EmailType.PasswordReset));
+
+        Assert.IsTrue(html.Contains(WebUtility.HtmlEncode(Link)));
+        Assert.IsTrue(text.Contains(Link));
+    }
+
+    [TestMethod]
+    public void Activation_OtherStaffRole_UsesStaffSubject()
+    {
+        var (subject, _, _) = EmailTemplates.Build(Request(EmailType.Activation, role: "Admin"));
+
+        Assert.AreEqual("Activeer uw account", subject);
+    }
+
+    [TestMethod]
+    public void Build_BlankFirstName_DoesNotThrow()
+    {
+        var (_, html, text) = EmailTemplates.Build(Request(EmailType.Activation, name: " "));
+
+        Assert.IsFalse(string.IsNullOrWhiteSpace(html));
+        Assert.IsFalse(string.IsNullOrWhiteSpace(text));
+    }
 }

@@ -109,17 +109,17 @@ public class UserControllerTests
     }
 
     [TestMethod]
-public async Task CreateUser_EmailDeliveryFails_Returns503()
-{
-    _users.Setup(u => u.CreateUserAsync(It.IsAny<CreateUserDto>(), It.IsAny<int>()))
-          .ThrowsAsync(new EmailDeliveryException("De activatiemail kon niet worden verstuurd.", new Exception()));
+    public async Task CreateUser_EmailDeliveryFails_Returns503()
+    {
+        _users.Setup(u => u.CreateUserAsync(It.IsAny<CreateUserDto>(), It.IsAny<int>()))
+              .ThrowsAsync(new EmailDeliveryException("De activatiemail kon niet worden verstuurd.", new Exception()));
 
-    var result = await CreateController().CreateUser(MakeDto());
+        var result = await CreateController().CreateUser(MakeDto());
 
-    var status = result.Result as ObjectResult;
-    Assert.IsNotNull(status);
-    Assert.AreEqual(StatusCodes.Status503ServiceUnavailable, status.StatusCode);
-}
+        var status = result.Result as ObjectResult;
+        Assert.IsNotNull(status);
+        Assert.AreEqual(StatusCodes.Status503ServiceUnavailable, status.StatusCode);
+    }
 
     [TestMethod]
     public async Task CreateUser_UnknownRole_Returns400_AndSendsNoEmail()
@@ -143,5 +143,31 @@ public async Task CreateUser_EmailDeliveryFails_Returns503()
 
         Assert.IsInstanceOfType(result.Result, typeof(ConflictObjectResult));
         VerifyNoEmailSent();
+    }
+
+    [TestMethod]
+    public async Task CreateUser_MissingUserIdClaim_ThrowsUnauthorizedAccessException()
+    {
+        var controller = CreateController(userId: null);
+
+        var ex = await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => controller.CreateUser(MakeDto()));
+
+        Assert.AreEqual("Invalid or missing user identity claim.", ex.Message);
+        VerifyNoEmailSent();
+    }
+
+    [TestMethod]
+    public async Task CreateUser_EmailDeliveryFailsInService_Returns503()
+    {
+        // Email delivery failure originates from IUserService.CreateUserAsync
+        _users.Setup(u => u.CreateUserAsync(It.IsAny<CreateUserDto>(), It.IsAny<int>()))
+              .ThrowsAsync(new EmailDeliveryException("De activatiemail kon niet worden verstuurd.", new Exception()));
+
+        var result = await CreateController().CreateUser(MakeDto());
+
+        var status = result.Result as ObjectResult;
+        Assert.IsNotNull(status);
+        Assert.AreEqual(StatusCodes.Status503ServiceUnavailable, status.StatusCode);
     }
 }
