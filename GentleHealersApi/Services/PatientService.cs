@@ -26,7 +26,7 @@ namespace GentleHealersApi.Services
                     "Het BSN is ongeldig volgens de elfproef.");
 
             using var connection =
-                await _connectionFactory.GetAuthenticatedConnectionAsync(
+                await _connectionFactory.GetConnectionAsync(
                     practitionerUserId);
 
             // 2. Find the practice ID for the practitioner

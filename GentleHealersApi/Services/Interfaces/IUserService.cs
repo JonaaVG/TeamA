@@ -11,5 +11,9 @@ namespace GentleHealersApi.Services.Interfaces
         /// <param name="practitionerUserId">The unique ID of the practitioner creating the user.</param>
         /// <returns>The created user data transfer object.</returns>
         Task<UserCreatedDto> CreateUserAsync(CreateUserDto dto, int practitionerUserId);
+
+        Task<bool> ValidateActivationTokenAsync(string email, string token);
+
+        Task<bool> SetPasswordAsync(SetPasswordDto dto);
     }
 }
