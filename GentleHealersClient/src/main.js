@@ -1,10 +1,14 @@
 import { createApp } from 'vue'
 
-import App from './App.vue'
+import AppRoot from './AppRoot.vue'
 import router from './router'
+import treatmentCodeImportRoute from './router/treatmentCodeImportRoute'
 
 import './assets/main.css'
-const app = createApp(App)
+
+router.addRoute(treatmentCodeImportRoute)
+
+const app = createApp(AppRoot)
 app.use(router)
 
 app.mount('#app')

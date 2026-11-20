@@ -35,7 +35,7 @@ namespace GentleHealersApi.Services
             {
                 CommandType = CommandType.StoredProcedure
             };
-            command.Parameters.AddWithValue("@key", "UserID");
+            command.Parameters.AddWithValue("@key", "UserId");
             command.Parameters.AddWithValue("@value", userId);
             command.Parameters.AddWithValue("@read_only", 1);
 

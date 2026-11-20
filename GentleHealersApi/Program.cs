@@ -7,6 +7,9 @@ using GentleHealersApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddOpenApi();
+GentleHealersApi.Extensions.TreatmentCodeServiceExtensions.AddTreatmentCodeImport(builder.Services);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueClient", policy =>
