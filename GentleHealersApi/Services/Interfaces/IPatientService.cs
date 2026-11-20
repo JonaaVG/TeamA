@@ -1,5 +1,5 @@
 using GentleHealersApi.DTOs.Patient;
-
+using Microsoft.Data.SqlClient;
 namespace GentleHealersApi.Services.Interfaces
 {
 
@@ -12,5 +12,9 @@ namespace GentleHealersApi.Services.Interfaces
         /// <param name="practitionerUserId">The unique ID of the practitioner.</param>
         /// <returns>A task representing the asynchronous operation, with the created patient data.</returns>
         Task<PatientCreatedDto> AddPatientAsync(CreatePatientDto dto, int practitionerUserId);
+
+        Task<PatientCreatedDto> AddPatientAsync(
+            CreatePatientDto dto, int practitionerUserId,
+            SqlConnection connection, SqlTransaction transaction);
     }
 }
