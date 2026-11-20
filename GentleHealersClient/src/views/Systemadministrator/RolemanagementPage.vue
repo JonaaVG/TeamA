@@ -4,24 +4,12 @@
       <h1 id="page-title" tabindex="-1">Rollen en rechten</h1>
       <p class="intro">Wijzig de rol van een bestaand gebruikersaccount.</p>
 
-      <p
-        class="message success"
-        :class="{ 'message-empty': !successMessage }"
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-      >
+      <StatusMessage variant="success" :empty="!successMessage">
         {{ successMessage }}
-      </p>
-      <p
-        class="message error"
-        :class="{ 'message-empty': !errorMessage }"
-        role="alert"
-        aria-live="assertive"
-        aria-atomic="true"
-      >
+      </StatusMessage>
+      <StatusMessage variant="error" :empty="!errorMessage">
         {{ errorMessage }}
-      </p>
+      </StatusMessage>
 
       <div class="search-bar">
         <label for="user-search">Zoek gebruiker op naam</label>
@@ -63,16 +51,15 @@
           {{ statusLabel(user.status) }}
         </span>
 
-        <button
-          class="button button-primary"
+        <ActionButton
+          variant="primary"
           :aria-label="`Rol wijzigen voor ${user.firstName} ${user.lastName}`"
           @click="changeRole(user)"
         >
           Rol wijzigen
-        </button>
-          <button
-            class="button"
-            :class="user.status === 'Active' ? 'button-danger' : 'button-primary'"
+        </ActionButton>
+          <ActionButton
+            :variant="user.status === 'Active' ? 'danger' : 'primary'"
             :disabled="updatingUserId === user.userId"
             @click="toggleAccountStatus(user)"
           >
@@ -83,7 +70,7 @@
                   ? 'Account deactiveren'
                   : 'Account activeren'
             }}
-          </button>
+          </ActionButton>
         </div>
 
         <p v-if="filteredUsers.length === 0" class="empty-state">
@@ -97,6 +84,8 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import api from '@/services/api'
+import ActionButton from '@/components/ActionButton.vue'
+import StatusMessage from '@/components/StatusMessage.vue'
 
 const roles = ref([])
 const users = ref([])
@@ -317,47 +306,6 @@ select {
   font-size: 10px;
 }
 
-.button {
-  min-height: 31px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 8px;
-  color: white;
-  font-size: 10px;
-  font-weight: 700;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.button-primary {
-  background: #153b70;
-}
-
-.button-danger {
-  background: #810b0b;
-}
-
-.message {
-  margin: 12px 0;
-  padding: 10px;
-  border-radius: 6px;
-}
-
-.message-empty {
-  margin: 0;
-  padding: 0;
-}
-
-.success {
-  color: #166534;
-  background: #dcfce7;
-}
-
-.error {
-  color: #991b1b;
-  background: #fee2e2;
-}
-
 .status-badge {
   display: inline-block;
   width: fit-content;
@@ -383,11 +331,6 @@ select {
   color: #92400e;
 }
 
-.button:disabled {
-  cursor: wait;
-  opacity: 0.6;
-}
-
 @media (max-width: 600px) {
   .list-heading {
     display: none;
@@ -404,8 +347,7 @@ select {
     font-size: 14px;
   }
 
-  select,
-  .button {
+  select {
     min-height: 40px;
     font-size: 14px;
   }

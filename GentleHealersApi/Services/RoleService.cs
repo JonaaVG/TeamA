@@ -5,15 +5,21 @@ using System.Data;
 
 namespace GentleHealersApi.Services
 {
+    /// <summary>Performs role and account-status operations using SQL Server.</summary>
     public class RoleService : IRoleService
     {
+        /// <summary>The connection string used to access the application database.</summary>
         private readonly string _connectionString;
 
+        /// <summary>Creates the service with the configured default database connection.</summary>
+        /// <param name="configuration">Application configuration containing the connection string.</param>
         public RoleService(IConfiguration configuration)
         {
             _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
+        /// <summary>Loads all roles, ordered alphabetically by name.</summary>
+        /// <returns>A list of role identifiers and names.</returns>
         public async Task<List<RoleDto>> GetAllRolesAsync()
         {
             var roles = new List<RoleDto>();
@@ -39,6 +45,8 @@ namespace GentleHealersApi.Services
             return roles;
         }
 
+        /// <summary>Loads users with their assigned role and account status.</summary>
+        /// <returns>A user list ordered by last name and first name.</returns>
         public async Task<List<UserRoleDto>> GetAllUsersAsync()
         {
             var users = new List<UserRoleDto>();
@@ -74,6 +82,10 @@ namespace GentleHealersApi.Services
             return users;
         }
 
+        /// <summary>Assigns a role when both the user and role exist.</summary>
+        /// <param name="userId">The user to update.</param>
+        /// <param name="roleId">The existing role to assign.</param>
+        /// <returns>True if a row was updated; otherwise, false.</returns>
         public async Task<bool> ChangeRoleAsync(int userId, int roleId)
         {
             await using var connection = new SqlConnection(_connectionString);
@@ -97,6 +109,9 @@ namespace GentleHealersApi.Services
             return await command.ExecuteNonQueryAsync() > 0;
         }
 
+        /// <summary>Sets the specified user's account status to Inactive.</summary>
+        /// <param name="userId">The user to deactivate.</param>
+        /// <returns>True if a user row was updated; otherwise, false.</returns>
         public async Task<bool> DeactivateUserAsync(int userId)
         {
             await using var connection = new SqlConnection(_connectionString);
@@ -114,6 +129,9 @@ namespace GentleHealersApi.Services
             return await command.ExecuteNonQueryAsync() > 0;
         }
 
+        /// <summary>Sets the specified user's account status to Active.</summary>
+        /// <param name="userId">The user to activate.</param>
+        /// <returns>True if a user row was updated; otherwise, false.</returns>
         public async Task<bool> ActivateUserAsync(int userId)
         {
             await using var connection = new SqlConnection(_connectionString);

@@ -1,12 +1,8 @@
 <template>
   <div class="app-shell">
-    <a
-      v-if="showNavigation"
-      class="skip-link"
-      href="#page-title"
-      @click.prevent="focusPageTitle"
-    >
-      Ga naar de hoofdinhoud
+    <a id="skip-link" href="#page-title" @click.prevent="skipToMain"
+      class="skip-link focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-white focus:text-blue-900 focus:px-4 focus:py-3 focus:rounded-lg focus:shadow-xl focus:border-2 focus:border-blue-900 focus:font-semibold">
+      Ga direct naar hoofdinhoud
     </a>
 
     <TopNavigation
@@ -56,7 +52,9 @@
       </template>
     </TopNavigation>
 
-    <RouterView />
+    <div id="main-content">
+      <RouterView />
+    </div>
   </div>
 </template>
 
@@ -130,8 +128,24 @@ function handleLogout() {
   router.push({ name: 'login' })
 }
 
-function focusPageTitle() {
-  document.getElementById('page-title')?.focus()
+// Function to smoothly and reliably force focus to the main content area
+const skipToMain = () => {
+  const pageTitle = document.getElementById('page-title')
+  if (pageTitle) {
+    // Geef altijd direct de focus
+    pageTitle.focus()
+
+    // Controleer of het element al volledig binnen de huidige viewport (het zichtbare scherm) valt
+    const rect = pageTitle.getBoundingClientRect()
+    const isVisible =
+      rect.top >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+
+    // Alleen automatisch scrollen als de titel NIET in beeld is
+    if (!isVisible) {
+      pageTitle.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }
 }
 </script>
 
@@ -143,19 +157,28 @@ function focusPageTitle() {
 
 .skip-link {
   position: fixed;
-  z-index: 100;
-  top: 8px;
-  left: 8px;
-  transform: translateY(-150%);
-  padding: 10px 14px;
-  border-radius: 6px;
-  background: white;
-  color: #153b70;
-  font-weight: 700;
+  top: 0;
+  left: 16px;
+  transform: translateY(-100%);
+  background: #ffffff;
+  color: #1e3a8a;
+  padding: 12px 16px;
+  z-index: 99999;
+  border-radius: 0 0 8px 8px;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 2px solid #1e3a8a;
+  transition: transform 0.2s ease-in-out;
 }
 
 .skip-link:focus {
   transform: translateY(0);
+  outline: none;
+}
+
+:deep(#page-title:focus) {
+  outline: 3px solid #1681d2;
+  outline-offset: 4px;
 }
 
 .profile-details p {

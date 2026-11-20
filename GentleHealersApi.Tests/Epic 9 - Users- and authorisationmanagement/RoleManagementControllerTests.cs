@@ -8,12 +8,14 @@ using Moq;
 
 namespace GentleHealersApi.Tests;
 
+/// <summary>Tests role-management controller responses and authorization metadata.</summary>
 [TestClass]
 public sealed class RoleManagementControllerTests
 {
     private Mock<IRoleService> _roleService = null!;
     private RoleMangementController _controller = null!;
 
+    /// <summary>Creates a strict role-service mock and controller before each test.</summary>
     [TestInitialize]
     public void Setup()
     {
@@ -21,6 +23,7 @@ public sealed class RoleManagementControllerTests
         _controller = new RoleMangementController(_roleService.Object);
     }
 
+    /// <summary>Verifies that the roles endpoint returns the roles supplied by the service.</summary>
     [TestMethod]
     public async Task GetRoles_ReturnsRolesFromService()
     {
@@ -39,6 +42,7 @@ public sealed class RoleManagementControllerTests
         _roleService.Verify(service => service.GetAllRolesAsync(), Times.Once);
     }
 
+    /// <summary>Verifies that the users endpoint returns the users supplied by the service.</summary>
     [TestMethod]
     public async Task GetUsers_ReturnsUsersFromService()
     {
@@ -56,6 +60,7 @@ public sealed class RoleManagementControllerTests
         _roleService.Verify(service => service.GetAllUsersAsync(), Times.Once);
     }
 
+    /// <summary>Verifies that a successful role change returns HTTP 200.</summary>
     [TestMethod]
     public async Task ChangeUserRole_WhenServiceChangesRole_ReturnsOk()
     {
@@ -70,6 +75,7 @@ public sealed class RoleManagementControllerTests
         _roleService.Verify(service => service.ChangeRoleAsync(7, 3), Times.Once);
     }
 
+    /// <summary>Verifies that a missing user or role results in HTTP 404.</summary>
     [TestMethod]
     public async Task ChangeUserRole_WhenUserOrRoleDoesNotExist_ReturnsNotFound()
     {
@@ -83,6 +89,7 @@ public sealed class RoleManagementControllerTests
         _roleService.Verify(service => service.ChangeRoleAsync(7, 999), Times.Once);
     }
 
+    /// <summary>Verifies that a successful account deactivation returns HTTP 200.</summary>
     [TestMethod]
     public async Task DeactivateUser_WhenServiceDeactivatesAccount_ReturnsOk()
     {
@@ -96,6 +103,7 @@ public sealed class RoleManagementControllerTests
         _roleService.Verify(service => service.DeactivateUserAsync(7), Times.Once);
     }
 
+    /// <summary>Verifies that deactivating a nonexistent user results in HTTP 404.</summary>
     [TestMethod]
     public async Task DeactivateUser_WhenUserDoesNotExist_ReturnsNotFound()
     {
@@ -108,6 +116,7 @@ public sealed class RoleManagementControllerTests
         Assert.AreEqual("Gebruiker niet gevonden.", notFound.Value);
     }
 
+    /// <summary>Verifies that a successful account activation returns HTTP 200.</summary>
     [TestMethod]
     public async Task ActivateUser_WhenServiceActivatesAccount_ReturnsOk()
     {
@@ -121,6 +130,7 @@ public sealed class RoleManagementControllerTests
         _roleService.Verify(service => service.ActivateUserAsync(7), Times.Once);
     }
 
+    /// <summary>Verifies that activating a nonexistent user results in HTTP 404.</summary>
     [TestMethod]
     public async Task ActivateUser_WhenUserDoesNotExist_ReturnsNotFound()
     {
@@ -133,6 +143,7 @@ public sealed class RoleManagementControllerTests
         Assert.AreEqual("Gebruiker niet gevonden.", notFound.Value);
     }
 
+    /// <summary>Verifies that the controller requires the SystemAdministrator role.</summary>
     [TestMethod]
     public void Controller_RequiresSystemAdministratorRole()
     {
