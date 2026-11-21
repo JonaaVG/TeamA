@@ -2,7 +2,7 @@
 import {useRoute, useRouter} from 'vue-router'
 import {ref, onMounted} from 'vue'
 import nl from '../../services/nl.json'
-
+import api from '@/services/api';
 const translations = nl.SetUpPasswordPage
 const route = useRoute();
 const router = useRouter();
@@ -15,29 +15,22 @@ const isChecking = ref(true)
 const isDone = ref(false)
 
 
-onMounted(async() => {
+onMounted(async () => {
     if (!token || !email) {
         status.value = translations.invalidLinkStatus
         isChecking.value = false
         return
     }
     try {
-        const response = await fetch('https://localhost:7113/api/users/validate-activation-token', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                token, email
-            })
+        await api.post('/users/validate-activation-token', {
+            token,
+            email
         })
-        if (!response.ok) {
-            throw new Error(translations.activationFailed)
-        }
 
         status.value = translations.activatedStatus
         isValid.value = true
     } catch (error) {
+        console.error(error)
         status.value = translations.invalidOrExpiredStatus
     } finally {
         isChecking.value = false
@@ -71,30 +64,18 @@ async function setPassword() {
     }
 
     try {
-        const response = await fetch('https://localhost:7113/api/users/set-password', 
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                email,
-                token,
-                password: password.value
-            })
-        })
+    await api.post('/users/set-password', {
+        email,
+        token,
+        password: password.value
+    })
 
-        if (!response.ok) {
-            throw new Error(translations.setPasswordFailed)
-        }
-
-        succesmessage.value = translations.passwordSetSuccess
-        status.value = translations.accountActivatedStatus
-        isDone.value = true
-
-    } catch {
-        errormessage.value = translations.setPasswordFailed
-    }
+    succesmessage.value = translations.passwordSetSuccess
+    status.value = translations.accountActivatedStatus
+    isDone.value = true
+} catch {
+    errormessage.value = translations.setPasswordFailed
+}
 
 }
 

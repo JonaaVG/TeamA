@@ -33,12 +33,3 @@ dist-ssr
 
 .env
 .env.local
-
-#Lokale configuratie
-GentleHealersApi/appsettings.json
-
-# Visual Studio tijdelijke bestanden
-.vs/
-
-# Gebruikersspecifieke Visual Studio instellingen
-*.csproj.user
