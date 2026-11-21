@@ -58,6 +58,31 @@ async function setPassword() {
         return
     }
 
+    if (password.value.length < 12) {
+        errormessage.value = translations.minimumLength
+        return
+    }
+
+    if (!/\d/.test(password.value)) {
+        errormessage.value = translations.minimumDigit
+        return
+    }
+
+    if (!/[A-Z]/.test(password.value)) {
+        errormessage.value = translations.minimumUppercase
+        return
+    }
+
+    if (!/[a-z]/.test(password.value)) {
+        errormessage.value = translations.minimumLowercase
+        return
+    }
+
+    if (!/[^A-Za-z0-9]/.test(password.value)) {
+        errormessage.value = translations.minimumSymbol
+        return
+    }
+
     if (!isValid.value) {
         errormessage.value = translations.invalidActivationLink
         return

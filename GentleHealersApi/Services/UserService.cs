@@ -160,6 +160,9 @@ namespace GentleHealersApi.Services
 
         public async Task<bool> SetPasswordAsync(SetPasswordDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.Password) || !IsPasswordValid(dto.Password))
+                return false;
+
             using var connection = await _connectionFactory.GetConnectionAsync();
             var query = @"
                 SELECT ut.UserTokenId, ut.TokenHash, au.UserId
@@ -227,6 +230,15 @@ namespace GentleHealersApi.Services
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        private static bool IsPasswordValid(string password)
+        {
+            return password.Length >= 12
+                && password.Any(char.IsDigit)
+                && password.Any(char.IsUpper)
+                && password.Any(char.IsLower)
+                && password.Any(character => !char.IsLetterOrDigit(character));
         }
     }
 }

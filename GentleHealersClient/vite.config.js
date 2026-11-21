@@ -1,8 +1,9 @@
 import { fileURLToPath, URL } from 'node:url'
 
 import vue from '@vitejs/plugin-vue'
-import { defineConfig, loadEnv } from 'vite'
-import vueDevTools from 'vite-plugin-vue-devtools'
+import { loadEnv } from 'vite'
+import { defineConfig } from 'vitest/config'
+// import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig(({ mode }) => {
@@ -11,7 +12,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [
       vue(),
-      vueDevTools(),
+      // vueDevTools(),
       tailwindcss(),
     ],
     resolve: {
@@ -27,6 +28,11 @@ export default defineConfig(({ mode }) => {
           secure: false,
         },
       },
+    },
+    test: {
+      environment: 'jsdom',
+      clearMocks: true,
+      restoreMocks: true,
     },
   }
 })
