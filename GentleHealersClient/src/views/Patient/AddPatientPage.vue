@@ -9,11 +9,11 @@
             </div>
 
             <!-- Fout- of succesmeldingen -->
-            <div v-if="errorMessage" class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+            <div v-if="errorMessage" class="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm" id="patient-error">
                 {{ errorMessage }}
             </div>
             <div v-if="successMessage"
-                class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm">
+                class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm" id="patient-success">
                 {{ successMessage }}
             </div>
 
@@ -26,40 +26,40 @@
                     <!-- Firstname -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-slate-700">Voornaam</label>
-                        <input type="text" v-model="form.firstname" placeholder="Voornaam patiënt" aria-label="Invoerveld voornaam patiënt" required
+                        <input type="text" v-model="form.firstname" placeholder="Voornaam patiënt" aria-label="Invoerveld voornaam patiënt" id="patient-firstname"required
                             class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent text-slate-800 placeholder-slate-400" />
                     </div>
                     <!-- Lastname -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-slate-700">Achternaam</label>
-                        <input v-model="form.lastname" placeholder="Achternaam patiënt" aria-label="Invoerveld achternaam patiënt" required
+                        <input v-model="form.lastname" placeholder="Achternaam patiënt" aria-label="Invoerveld achternaam patiënt" id="patient-lastname"required
                             class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent text-slate-800 placeholder-slate-400" />
                     </div>
                     <!-- Email -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-slate-700">E-mailadres</label>
-                        <input type="email" v-model="form.email" placeholder="naam@voorbeeld.nl" aria-label="Invoerveld e-mailadres patiënt" required
+                        <input type="email" v-model="form.email" placeholder="naam@voorbeeld.nl" aria-label="Invoerveld e-mailadres patiënt" id="patient-email" required
                             class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent text-slate-800 placeholder-slate-400" />
                     </div>
 
                     <!-- BSN -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-slate-700">BSN</label>
-                        <input type="text" v-model="form.bsn" placeholder="BSN" aria-label="Invoerveld BSN patiënt" required
+                        <input type="text" v-model="form.bsn" placeholder="BSN" aria-label="Invoerveld BSN patiënt" id="patient-bsn" required
                             class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent text-slate-800 placeholder-slate-400" />
                     </div>
 
                     <!-- Phone number -->
                     <div class="space-y-2">
                         <label class="block text-sm font-medium text-slate-700">Telefoonnummer</label>
-                        <input type="tel" v-model="form.phone" placeholder="Telefoonnummer" aria-label="Invoerveld telefoonnummer patiënt" required
+                        <input type="tel" v-model="form.phone" placeholder="Telefoonnummer" aria-label="Invoerveld telefoonnummer patiënt" id="patient-phone" required
                             class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent text-slate-800 placeholder-slate-400" />
                     </div>
 
                     <!-- Date of birth -->
                     <div class="space-y-2 md:col-span-2">
                         <label class="block text-sm font-medium text-slate-700">Geboortedatum</label>
-                        <input type="date" v-model="form.dateOfBirth" :max="today" :min="minDate" aria-label="datumveld geboortedatum patiënt " required
+                        <input type="date" v-model="form.dateOfBirth" :max="today" :min="minDate" aria-label="datumveld geboortedatum patiënt " id="patient-date-of-birth" required
                             class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:border-transparent text-slate-800" />
                     </div>
 
@@ -72,7 +72,7 @@
                         Annuleren
                     </button>
 
-                    <button type="submit" :disabled="isLoading"
+                    <button id="patient-submit" type="submit" :disabled="isLoading"
                         class="px-6 py-3 rounded-xl bg-blue-950 text-white font-medium hover:bg-blue-900 transition disabled:opacity-50">
                         {{ isLoading ? 'Bezig...' : 'Account aanmaken' }}
                     </button>

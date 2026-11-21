@@ -82,6 +82,16 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+if (builder.Environment.IsEnvironment("Testing"))
+{
+    builder.Configuration.AddUserSecrets<Program>();
+
+    // Safeguard: Ensure that the testing environment is using a database whose name starts with "Test"
+    var connStr = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
+    var dbName = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connStr).InitialCatalog;
+    if (!dbName.StartsWith("Test", StringComparison.OrdinalIgnoreCase))
+        throw new InvalidOperationException($"Testing-omgeving gebruikt database '{dbName}', verwacht een naam die met 'Test' begint.");
+}
 app.UseHttpsRedirection();
 
 app.UseCors("AllowVueClient");
