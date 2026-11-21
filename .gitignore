@@ -30,3 +30,12 @@ dist-ssr
 # Ignore user-specific or environment-specific appsettings files
 **/appsettings.*.json
 !appsettings.json
+appsettings.Development.json
+appsettings.Testing.json
+.env
+.env.local
+
+# Visual Studio lokale bestanden
+.vs/
+*.csproj.user
+/GentleHealersApi
