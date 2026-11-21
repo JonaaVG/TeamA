@@ -35,7 +35,7 @@ test('TC-10.1.2-05 displays the API validation message and accepted formats', ()
     getTreatmentCodeImportError({ response: { status: 400, data: { message: 'De kolom Zorgcode ontbreekt.' } } }),
     'De kolom Zorgcode ontbreekt.',
   )
-  assert.match(getTreatmentCodeImportError({ response: { status: 415 } }), /\.xlsx.*\.xls/)
+  assert.match(getTreatmentCodeImportError({ response: { status: 415 } }), /\(\.xlsx, \.xls of \.csv\)/)
 })
 
 test('TC-10.1.1-17 explains a failed connection', () => {

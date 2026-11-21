@@ -23,7 +23,7 @@ public sealed class TreatmentCodeImportTests
             ["Z0001", "Consult", "Chirurgie", 2, 125.50m],
             ["Z0002", "Onderzoek", "Cardiologie", 4, 320m]);
 
-        var rows = new TreatmentCodeExcelReader().Read(workbook);
+        var rows = new TreatmentCodeFileReader().Read(workbook);
 
         Assert.HasCount(2, rows);
         Assert.AreEqual("Z0001", rows[0].CareCode);
@@ -41,11 +41,36 @@ public sealed class TreatmentCodeImportTests
             ["CareCode", "Description", "Specialty", "DurationQuarters", "Cost", "PreparationNote"],
             ["Z0001", "Onderzoek", "Chirurgie", "3", "€ 1.234,56", "Nuchter blijven"]);
 
-        var row = new TreatmentCodeExcelReader().Read(workbook).Single();
+        var row = new TreatmentCodeFileReader().Read(workbook).Single();
 
         Assert.AreEqual(1234.56m, row.Cost);
         Assert.AreEqual(3, row.DurationQuarters);
         Assert.AreEqual("Nuchter blijven", row.PreparationNote);
+    }
+
+    [TestMethod]
+    public async Task TC_10_1_1_27_ImportsCommaAndSemicolonSeparatedCsv()
+    {
+        var cases = new[]
+        {
+            "Zorgcode,Omschrijving,Specialisme,Tijdsduur (kwartieren),Kosten (€),Voorbereiding\r\n" +
+            "Z0001,\"Consult, vervolg\",Chirurgie,2,125.50,\r\n",
+            "Zorgcode;Omschrijving;Specialisme;Tijdsduur (kwartieren);Kosten (€);Voorbereiding\r\n" +
+            "Z0001;Consult, vervolg;Chirurgie;2;125,50;\r\n",
+        };
+
+        foreach (var csv in cases)
+        {
+            var repository = new RecordingRepository();
+            var service = new TreatmentCodeImportService(new TreatmentCodeFileReader(), repository);
+            var result = await service.ImportAsync(CreateFile("behandelingen.CSV", Encoding.UTF8.GetBytes(csv)), 42);
+
+            Assert.AreEqual(1, result.ImportedCount);
+            Assert.AreEqual(1, repository.ImportCalls);
+            Assert.AreEqual(
+                new TreatmentCodeImportRow("Z0001", "Consult, vervolg", "Chirurgie", 2, 125.50m, null),
+                repository.Rows!.Single());
+        }
     }
 
     [TestMethod]
@@ -66,9 +91,9 @@ public sealed class TreatmentCodeImportTests
     }
 
     [TestMethod]
-    public async Task TC_10_1_2_01_RejectsNonExcelBeforeReadingOrSavingAnything()
+    public async Task TC_10_1_2_01_RejectsUnsupportedExtensionsBeforeReadingOrSavingAnything()
     {
-        foreach (var fileName in new[] { "behandelingen.csv", "behandelingen.pdf", "behandelingen.xlsx.exe", "behandelingen" })
+        foreach (var fileName in new[] { "behandelingen.txt", "behandelingen.pdf", "behandelingen.xlsx.exe", "behandelingen" })
         {
             var reader = new StubReader([]);
             var repository = new RecordingRepository();
@@ -78,8 +103,7 @@ public sealed class TreatmentCodeImportTests
                 () => service.ImportAsync(CreateFile(fileName), 42));
 
             StringAssert.Contains(exception.Message, "Excel");
-            StringAssert.Contains(exception.Message, ".xlsx");
-            StringAssert.Contains(exception.Message, ".xls");
+            StringAssert.Contains(exception.Message, "(.xlsx, .xls of .csv)");
             Assert.AreEqual(0, reader.ReadCalls);
             Assert.AreEqual(0, repository.ImportCalls);
         }
@@ -91,9 +115,25 @@ public sealed class TreatmentCodeImportTests
         using var content = new MemoryStream(Encoding.UTF8.GetBytes("Dit is geen Excel-bestand."));
 
         var exception = Assert.Throws<TreatmentCodeImportException>(
-            () => new TreatmentCodeExcelReader().Read(content));
+            () => new TreatmentCodeFileReader().Read(content));
 
         StringAssert.Contains(exception.Message, "Excel");
+    }
+
+    [TestMethod]
+    public async Task TC_10_1_2_07_RejectsCsvWithExtraFieldsWithoutWritingAnything()
+    {
+        const string csv = "Zorgcode,Omschrijving,Specialisme,Tijdsduur (kwartieren),Kosten (€)\r\n" +
+                           "Z0001,Consult,Chirurgie,2,125.50\r\n" +
+                           "Z0002,Consult,Chirurgie,2,125,50\r\n";
+        var repository = new RecordingRepository();
+        var service = new TreatmentCodeImportService(new TreatmentCodeFileReader(), repository);
+
+        var exception = await Assert.ThrowsAsync<TreatmentCodeImportException>(
+            () => service.ImportAsync(CreateFile("behandelingen.csv", Encoding.UTF8.GetBytes(csv)), 42));
+
+        StringAssert.Contains(exception.Message, "aantal CSV-velden");
+        Assert.AreEqual(0, repository.ImportCalls);
     }
 
     [TestMethod]
@@ -104,7 +144,7 @@ public sealed class TreatmentCodeImportTests
             ["Z0001", "Consult", "Chirurgie", 2]);
 
         var exception = Assert.Throws<TreatmentCodeImportException>(
-            () => new TreatmentCodeExcelReader().Read(workbook));
+            () => new TreatmentCodeFileReader().Read(workbook));
 
         StringAssert.Contains(exception.Message, "kolommen");
     }
@@ -118,7 +158,7 @@ public sealed class TreatmentCodeImportTests
             ["z0001", "Ander consult", "Chirurgie", 2, 75m]);
 
         var exception = Assert.Throws<TreatmentCodeImportException>(
-            () => new TreatmentCodeExcelReader().Read(workbook));
+            () => new TreatmentCodeFileReader().Read(workbook));
 
         StringAssert.Contains(exception.Message, "dubbel");
     }
@@ -132,7 +172,7 @@ public sealed class TreatmentCodeImportTests
                 ["Zorgcode", "Omschrijving", "Specialisme", "Tijdsduur", "Kosten"],
                 ["Z0001", "Consult", "Chirurgie", values[0], values[1]]);
 
-            Assert.Throws<TreatmentCodeImportException>(() => new TreatmentCodeExcelReader().Read(workbook));
+            Assert.Throws<TreatmentCodeImportException>(() => new TreatmentCodeFileReader().Read(workbook));
         }
     }
 
@@ -145,7 +185,7 @@ public sealed class TreatmentCodeImportTests
                 ["Zorgcode", "Omschrijving", "Specialisme", "Tijdsduur", "Kosten"],
                 ["Z0001", "Consult", "Chirurgie", 2, cost]);
 
-            Assert.Throws<TreatmentCodeImportException>(() => new TreatmentCodeExcelReader().Read(workbook));
+            Assert.Throws<TreatmentCodeImportException>(() => new TreatmentCodeFileReader().Read(workbook));
         }
     }
 
@@ -226,7 +266,11 @@ public sealed class TreatmentCodeImportTests
         return controller;
     }
 
-    private static FormFile CreateFile(string name) => new(new MemoryStream([1, 2, 3]), 0, 3, "file", name);
+    private static FormFile CreateFile(string name, byte[]? contents = null)
+    {
+        var data = contents ?? [1, 2, 3];
+        return new FormFile(new MemoryStream(data), 0, data.Length, "file", name);
+    }
 
     private sealed class RecordingRepository : ITreatmentCodeRepository
     {
@@ -255,7 +299,7 @@ public sealed class TreatmentCodeImportTests
     private sealed class StubReader(IReadOnlyList<TreatmentCodeImportRow> rows) : ITreatmentCodeReader
     {
         public int ReadCalls { get; private set; }
-        public IReadOnlyList<TreatmentCodeImportRow> Read(Stream stream)
+        public IReadOnlyList<TreatmentCodeImportRow> Read(Stream stream, bool isCsv = false)
         {
             ReadCalls++;
             return rows;
@@ -264,7 +308,7 @@ public sealed class TreatmentCodeImportTests
 
     private sealed class RejectingReader : ITreatmentCodeReader
     {
-        public IReadOnlyList<TreatmentCodeImportRow> Read(Stream stream) => throw new TreatmentCodeImportException("Het Excel-bestand kan niet worden gelezen.");
+        public IReadOnlyList<TreatmentCodeImportRow> Read(Stream stream, bool isCsv = false) => throw new TreatmentCodeImportException("Het bestand kan niet worden gelezen.");
     }
 
     // A real minimal OpenXML workbook, so parsing tests exercise ExcelDataReader rather than mocks.

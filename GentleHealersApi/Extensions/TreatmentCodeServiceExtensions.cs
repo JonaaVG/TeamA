@@ -9,7 +9,7 @@ public static class TreatmentCodeServiceExtensions
     public static IServiceCollection AddTreatmentCodeImport(this IServiceCollection services)
     {
         services.TryAddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
-        services.AddScoped<ITreatmentCodeReader, TreatmentCodeExcelReader>();
+        services.AddScoped<ITreatmentCodeReader, TreatmentCodeFileReader>();
         services.AddScoped<ITreatmentCodeRepository, TreatmentCodeRepository>();
         services.AddScoped<ITreatmentCodeImportService, TreatmentCodeImportService>();
         return services;

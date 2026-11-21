@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
@@ -69,9 +70,11 @@ public sealed class TreatmentCodeImportBrowserTests
 
     [TestMethod]
     [TestCategory("Browser")]
-    public void TC_10_1_1_12_ImportsAnExcelWorkbookAndPersistsTheTreatmentData()
+    [DataRow("XLSX")]
+    [DataRow("CSV")]
+    public void TC_10_1_1_12_ImportsAnExcelOrCsvFileAndPersistsTheTreatmentData(string extension)
     {
-        const string fileName = "behandelingen.XLSX";
+        var fileName = $"behandelingen.{extension}";
         const string code = "ZT001";
         const string description = "Selenium testconsult";
         const string specialty = "Chirurgie";
@@ -79,17 +82,23 @@ public sealed class TreatmentCodeImportBrowserTests
         const decimal price = 125.50m;
 
         var path = Path.Combine(testFiles!.FullName, fileName);
-        using var workbook = TreatmentCodeImportTests.CreateWorkbook(
-            ["Zorgcode", "Omschrijving", "Specialisme", "Tijdsduur (kwartieren)", "Kosten (€)"],
-            [code, description, specialty, quarters, price]);
-        using (var file = File.Create(path))
+        if (extension == "CSV")
         {
+            var amount = price.ToString(CultureInfo.InvariantCulture);
+            File.WriteAllText(path, $"Zorgcode,Omschrijving,Specialisme,Tijdsduur (kwartieren),Kosten (€)\r\n{code},{description},{specialty},{quarters},{amount}\r\n");
+        }
+        else
+        {
+            using var workbook = TreatmentCodeImportTests.CreateWorkbook(
+                ["Zorgcode", "Omschrijving", "Specialisme", "Tijdsduur (kwartieren)", "Kosten (€)"],
+                [code, description, specialty, quarters, price]);
+            using var file = File.Create(path);
             workbook.CopyTo(file);
         }
 
         var input = driver!.FindElement(FileInput);
         CollectionAssert.AreEquivalent(
-            new[] { ".xlsx", ".xls" },
+            new[] { ".xlsx", ".xls", ".csv" },
             input.GetDomAttribute("accept")!.Split(','));
 
         // The file name check should accept the legacy extension regardless of case.
@@ -120,7 +129,7 @@ public sealed class TreatmentCodeImportBrowserTests
     public void TC_10_1_2_04_RejectsFilesWithUnsupportedExtensions()
     {
         using var catalogBefore = ReadActiveCatalog(driver!);
-        foreach (var name in new[] { "behandelingen.pdf", "behandelingen.csv", "behandelingen.xlsx.txt", "behandelingen" })
+        foreach (var name in new[] { "behandelingen.pdf", "behandelingen.txt", "behandelingen.xlsx.txt", "behandelingen" })
         {
             var path = Path.Combine(testFiles!.FullName, name);
             File.WriteAllText(path, "Invalid browser test file.");
@@ -129,7 +138,7 @@ public sealed class TreatmentCodeImportBrowserTests
             Assert.AreEqual(name, driver.FindElement(By.Id("selected-treatment-code-file")).Text);
             Assert.IsFalse(driver.FindElement(SubmitButton).Enabled, $"The import button was enabled for {name}.");
             var feedback = driver.FindElement(By.CssSelector("#import-feedback[role='alert']")).Text;
-            StringAssert.Contains(feedback, "Excel-bestand (.xlsx of .xls)");
+            StringAssert.Contains(feedback, "Excel- of CSV-bestand (.xlsx, .xls of .csv)");
         }
 
         using var catalogAfter = ReadActiveCatalog(driver!);

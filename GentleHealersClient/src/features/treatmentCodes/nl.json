@@ -15,10 +15,10 @@
     "accountNumber": "Gebruikersnummer {id}",
     "logout": "Uitloggen uit de applicatie",
     "introduction": "Selecteer het aangeleverde bestand om de behandelcodes beschikbaar te maken voor het systeem.",
-    "fileLabel": "Excel-bestand",
+    "fileLabel": "Excel- of CSV-bestand",
     "filePlaceholder": "[Bestandsnaam]",
     "chooseFile": "Bestand kiezen",
-    "fileTypeHelp": "Geaccepteerd bestandstype: Excel.",
+    "fileTypeHelp": "Toegestane bestandstypen: Excel (.xlsx, .xls) en CSV (.csv).",
     "importInProgress": "Bezig met importeren...",
     "submitButton": "Importeren",
     "importFailed": "Import niet geslaagd",
@@ -26,15 +26,15 @@
     "loginAgain": "Opnieuw inloggen"
   },
   "TreatmentCodeImport": {
-    "fileRequired": "Kies eerst een Excel-bestand om te importeren.",
-    "unsupportedFileType": "Kies een Excel-bestand (.xlsx of .xls). Andere bestandstypen worden niet geïmporteerd.",
-    "emptyFile": "Het bestand is leeg. Kies het aangeleverde Excel-bestand.",
+    "fileRequired": "Kies eerst een Excel- of CSV-bestand om te importeren.",
+    "unsupportedFileType": "Kies een Excel- of CSV-bestand (.xlsx, .xls of .csv). Andere bestandstypen worden niet geïmporteerd.",
+    "emptyFile": "Het bestand is leeg. Kies een bestand met behandelcodes.",
     "unconfirmedImport": "De server kon de import niet bevestigen. Probeer het opnieuw.",
     "successfulImport": "Bestand is succesvol geïmporteerd.",
     "expiredSession": "Je sessie is verlopen. Log opnieuw in om een bestand te importeren.",
     "forbiddenImport": "Je hebt geen toestemming om behandelcodes te importeren. Dit kan alleen als systeembeheerder.",
-    "fileTooLarge": "Het bestand is te groot. Kies een kleiner Excel-bestand.",
-    "unreadableFile": "Het bestand kon niet worden ingelezen. Controleer of je het aangeleverde Excel-bestand hebt gekozen.",
+    "fileTooLarge": "Het bestand is te groot. Kies een kleiner bestand.",
+    "unreadableFile": "Het bestand kon niet worden ingelezen. Controleer of je het juiste Excel- of CSV-bestand hebt gekozen.",
     "connectionError": "Er is geen verbinding met de server. Controleer je verbinding en probeer het opnieuw.",
     "importFailed": "Importeren is niet gelukt. Probeer het opnieuw."
   }

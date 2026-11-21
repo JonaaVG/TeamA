@@ -7,6 +7,7 @@ import api from '@/services/api'
 import {
   getTreatmentCodeImportError,
   readTreatmentCodeImportResult,
+  treatmentCodeFileAccept,
   validateTreatmentCodeFile,
 } from '@/services/treatmentCodeImport'
 
@@ -172,7 +173,7 @@ async function importFile() {
           ref="fileInput"
           type="file"
           name="file"
-          accept=".xlsx,.xls"
+          :accept="treatmentCodeFileAccept"
           hidden
           :disabled="isLoading"
           @change="selectFile"

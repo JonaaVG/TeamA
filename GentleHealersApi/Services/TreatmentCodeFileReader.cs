@@ -8,65 +8,75 @@ using GentleHealersApi.Services.Interfaces;
 
 namespace GentleHealersApi.Services;
 
-public sealed class TreatmentCodeExcelReader : ITreatmentCodeReader
+public sealed class TreatmentCodeFileReader : ITreatmentCodeReader
 {
     public const int MaximumRows = 10_000;
     private static readonly CultureInfo DutchCulture = CultureInfo.GetCultureInfo("nl-NL");
     private static readonly string[] RequiredColumns = ["code", "description", "specialty", "duration", "cost"];
     private static readonly Dictionary<string, string> ColumnAliases = CreateColumnAliases();
 
-    public IReadOnlyList<TreatmentCodeImportRow> Read(Stream stream)
+    public IReadOnlyList<TreatmentCodeImportRow> Read(Stream stream, bool isCsv = false)
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         try
         {
-            using var excel = ExcelReaderFactory.CreateReader(stream, new ExcelReaderConfiguration { LeaveOpen = true });
+            var configuration = new ExcelReaderConfiguration { LeaveOpen = true };
+            if (isCsv) configuration.AutodetectSeparators = [',', ';'];
+            using var reader = isCsv
+                ? ExcelReaderFactory.CreateCsvReader(stream, configuration)
+                : ExcelReaderFactory.CreateReader(stream, configuration);
             var rows = new List<TreatmentCodeImportRow>();
             var careCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var foundHeader = false;
 
             do
             {
-                var columns = FindColumns(excel);
+                var columns = FindColumns(reader);
                 if (columns is null)
                 {
                     continue;
                 }
 
                 foundHeader = true;
-                while (excel.Read())
+                var csvColumnCount = isCsv ? GetCsvColumnCount(reader) : 0;
+                while (reader.Read())
                 {
-                    if (excel.Depth > 100_000)
+                    if (reader.Depth > 100_000)
                     {
-                        throw new TreatmentCodeImportException("Het Excel-werkblad bevat te veel rijen.");
+                        throw new TreatmentCodeImportException("Het bestand bevat te veel rijen.");
                     }
 
-                    if (IsEmptyRow(excel))
+                    if (IsEmptyRow(reader))
                     {
                         continue;
                     }
 
                     if (rows.Count >= MaximumRows)
                     {
-                        throw new TreatmentCodeImportException("Het Excel-bestand mag maximaal 10.000 behandelcodes bevatten.");
+                        throw new TreatmentCodeImportException("Het bestand mag maximaal 10.000 behandelcodes bevatten.");
                     }
 
-                    var rowNumber = excel.Depth + 1;
-                    var code = RequiredText(excel, columns["code"], "zorgcode", 30, rowNumber);
+                    var rowNumber = reader.Depth + 1;
+                    if (isCsv && GetCsvColumnCount(reader) != csvColumnCount)
+                    {
+                        throw new TreatmentCodeImportException($"Rij {rowNumber}: het aantal CSV-velden komt niet overeen met de kopregel.");
+                    }
+
+                    var code = RequiredText(reader, columns["code"], "zorgcode", 30, rowNumber);
                     if (!careCodes.Add(code))
                     {
-                        throw new TreatmentCodeImportException($"Rij {rowNumber}: de zorgcode komt dubbel voor in het Excel-bestand.");
+                        throw new TreatmentCodeImportException($"Rij {rowNumber}: de zorgcode komt dubbel voor in het bestand.");
                     }
 
-                    var description = RequiredText(excel, columns["description"], "omschrijving", 255, rowNumber);
-                    var specialty = RequiredText(excel, columns["specialty"], "specialisme", 100, rowNumber);
-                    var duration = ReadNumber(excel.GetValue(columns["duration"]), "tijdsduur", rowNumber);
+                    var description = RequiredText(reader, columns["description"], "omschrijving", 255, rowNumber);
+                    var specialty = RequiredText(reader, columns["specialty"], "specialisme", 100, rowNumber);
+                    var duration = ReadNumber(reader.GetValue(columns["duration"]), "tijdsduur", rowNumber);
                     if (duration <= 0 || duration > int.MaxValue || decimal.Truncate(duration) != duration)
                     {
                         throw new TreatmentCodeImportException($"Rij {rowNumber}: de tijdsduur moet een positief, heel aantal kwartieren zijn.");
                     }
 
-                    var cost = ReadNumber(excel.GetValue(columns["cost"]), "kosten", rowNumber);
+                    var cost = ReadNumber(reader.GetValue(columns["cost"]), "kosten", rowNumber);
                     if (cost < 0 || cost > 99_999_999.99m || decimal.Round(cost, 2) != cost)
                     {
                         throw new TreatmentCodeImportException($"Rij {rowNumber}: de kosten moeten een geldig bedrag met maximaal twee decimalen zijn.");
@@ -75,7 +85,7 @@ public sealed class TreatmentCodeExcelReader : ITreatmentCodeReader
                     string? preparation = null;
                     if (columns.TryGetValue("preparation", out var preparationIndex))
                     {
-                        preparation = Text(excel.GetValue(preparationIndex));
+                        preparation = Text(reader.GetValue(preparationIndex));
                         if (preparation.Length > 500)
                         {
                             throw new TreatmentCodeImportException($"Rij {rowNumber}: de voorbereiding mag maximaal 500 tekens bevatten.");
@@ -85,7 +95,7 @@ public sealed class TreatmentCodeExcelReader : ITreatmentCodeReader
 
                     rows.Add(new TreatmentCodeImportRow(code, description, specialty, (int)duration, cost, preparation));
                 }
-            } while (excel.NextResult());
+            } while (reader.NextResult());
 
             if (!foundHeader)
             {
@@ -94,7 +104,7 @@ public sealed class TreatmentCodeExcelReader : ITreatmentCodeReader
 
             if (rows.Count == 0)
             {
-                throw new TreatmentCodeImportException("Het Excel-bestand bevat geen behandelcodes.");
+                throw new TreatmentCodeImportException("Het bestand bevat geen behandelcodes.");
             }
 
             return rows;
@@ -105,8 +115,22 @@ public sealed class TreatmentCodeExcelReader : ITreatmentCodeReader
         }
         catch (Exception exception) when (exception is ExcelReaderException or IOException or ArgumentException or InvalidOperationException or NotSupportedException or System.Xml.XmlException)
         {
-            throw new TreatmentCodeImportException("Het bestand is geen leesbaar Excel-bestand. Kies een geldig .xlsx- of .xls-bestand.");
+            var message = isCsv
+                ? "Het bestand is geen leesbaar CSV-bestand. Gebruik komma's of puntkomma's als scheidingsteken."
+                : "Het bestand is geen leesbaar Excel-bestand. Kies een geldig .xlsx- of .xls-bestand.";
+            throw new TreatmentCodeImportException(message);
         }
+    }
+
+    private static int GetCsvColumnCount(IExcelDataReader reader)
+    {
+        // The reader pads short CSV rows with nulls. An explicit empty field is an empty string.
+        var count = reader.FieldCount;
+        while (count > 0 && reader.GetValue(count - 1) is null)
+        {
+            count--;
+        }
+        return count;
     }
 
     private static Dictionary<string, int>? FindColumns(IExcelDataReader excel)

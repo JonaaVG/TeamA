@@ -1,11 +1,13 @@
 import nl from '../features/treatmentCodes/nl.json' with { type: 'json' }
 
 const text = nl.TreatmentCodeImport
-const excelFilePattern = /\.(xlsx|xls)$/i
+const allowedExtensions = ['.xlsx', '.xls', '.csv']
+export const treatmentCodeFileAccept = allowedExtensions.join(',')
 
 export function validateTreatmentCodeFile(file) {
   if (!file) return text.fileRequired
-  if (!excelFilePattern.test(file.name ?? '')) {
+  const fileName = (file.name ?? '').toLowerCase()
+  if (!allowedExtensions.some(extension => fileName.endsWith(extension))) {
     return text.unsupportedFileType
   }
   if (file.size === 0) return text.emptyFile
