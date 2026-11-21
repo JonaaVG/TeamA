@@ -10,7 +10,7 @@
         :to="{ name: 'treatment-code-import' }"
         class="mt-6 inline-flex rounded-lg bg-[#12366a] px-5 py-3 font-semibold text-white hover:bg-[#0d2a54] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#12366a]"
       >
-        Zorgbehandelingenbestand importeren
+        {{ treatmentCodeText.title }}
       </router-link>
       
     </BaseCard>
@@ -29,7 +29,9 @@ import { ref, computed, onMounted } from 'vue'
 import api from '@/services/api'
 import DataList from '@/components/base/DataList.vue'
 import { canImportTreatmentCodes } from '@/features/treatmentCodes/access'
+import nl from '@/features/treatmentCodes/nl.json'
 
+const treatmentCodeText = nl.TreatmentCodeImportPage
 const canImportTreatmentCatalog = computed(() => canImportTreatmentCodes(localStorage.getItem('token')))
 
 // Reactive state for user profile and dashboard widgets

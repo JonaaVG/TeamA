@@ -2,6 +2,7 @@
 import { computed, nextTick, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { Check, ChevronDown, CircleAlert, LoaderCircle, LogOut, Menu } from 'lucide-vue-next'
+import nl from '@/features/treatmentCodes/nl.json'
 import api from '@/services/api'
 import {
   getTreatmentCodeImportError,
@@ -9,6 +10,7 @@ import {
   validateTreatmentCodeFile,
 } from '@/services/treatmentCodeImport'
 
+const text = nl.TreatmentCodeImportPage
 const router = useRouter()
 const fileInput = ref(null)
 const feedback = ref(null)
@@ -39,9 +41,10 @@ function readCurrentUser() {
 const currentUser = readCurrentUser()
 const accountName = currentUser.name || currentUser.unique_name || currentUser.email
   || currentUser['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
-  || 'Systeembeheerder'
+  || text.administrator
 const accountId = currentUser.sub || currentUser.nameid
   || currentUser['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+const accountNumber = accountId ? text.accountNumber.replace('{id}', () => String(accountId)) : ''
 
 function selectFile(event) {
   selectedFile.value = event.target.files?.[0] || null
@@ -103,7 +106,7 @@ async function importFile() {
 <template>
   <div class="treatment-import-page" @keydown.esc="closeMenus">
     <a class="import-skip-link" href="#page-title" @click.prevent="pageHeading?.focus()">
-      Ga direct naar hoofdinhoud
+      {{ text.skipToContent }}
     </a>
 
     <header class="import-header">
@@ -111,22 +114,22 @@ async function importFile() {
         <button
           class="menu-toggle"
           type="button"
-          :aria-label="menuOpen ? 'Menu sluiten' : 'Menu openen'"
+          :aria-label="menuOpen ? text.closeMenu : text.openMenu"
           :aria-expanded="menuOpen"
           aria-controls="import-navigation"
           @click="toggleMenu"
         >
           <Menu :size="50" :stroke-width="2.3" aria-hidden="true" />
-          <span>Menu</span>
+          <span>{{ text.menu }}</span>
         </button>
-        <nav v-if="menuOpen" id="import-navigation" ref="navigation" class="navigation-panel" aria-label="Hoofdnavigatie">
-          <RouterLink to="/" @click="closeMenus">Dashboard</RouterLink>
-          <RouterLink to="/admin/treatment-codes/import" @click="closeMenus">Zorgbehandelingenbestand importeren</RouterLink>
+        <nav v-if="menuOpen" id="import-navigation" ref="navigation" class="navigation-panel" :aria-label="text.mainNavigation">
+          <RouterLink to="/" @click="closeMenus">{{ text.dashboard }}</RouterLink>
+          <RouterLink to="/admin/treatment-codes/import" @click="closeMenus">{{ text.title }}</RouterLink>
         </nav>
       </div>
 
-      <RouterLink to="/" class="hospital-brand" aria-label="Zachte Heelmeesters, naar dashboard">
-        <span>Zachte</span> <span class="brand-accent">Heelmeesters</span>
+      <RouterLink to="/" class="hospital-brand" :aria-label="text.brandAriaLabel">
+        <span>{{ text.brandFirst }}</span> <span class="brand-accent">{{ text.brandSecond }}</span>
       </RouterLink>
 
       <div class="account-container">
@@ -139,31 +142,31 @@ async function importFile() {
         >
           <span class="account-summary">
             <span class="account-name" :title="accountName">{{ accountName }}</span>
-            <span v-if="accountId">Gebruikersnummer {{ accountId }}</span>
-            <span v-if="accountName !== 'Systeembeheerder'">Systeembeheerder</span>
+            <span v-if="accountNumber">{{ accountNumber }}</span>
+            <span v-if="accountName !== text.administrator">{{ text.administrator }}</span>
           </span>
           <ChevronDown :size="26" aria-hidden="true" />
         </button>
         <div v-if="accountOpen" id="import-account" class="account-panel">
           <p>{{ accountName }}</p>
-          <p v-if="accountId">Gebruikersnummer {{ accountId }}</p>
-          <p>Rol: Systeembeheerder</p>
+          <p v-if="accountNumber">{{ accountNumber }}</p>
+          <p>{{ text.administratorRole }}</p>
         </div>
       </div>
 
-      <button type="button" class="logout-button" aria-label="Uitloggen uit de applicatie" @click="logout">
+      <button type="button" class="logout-button" :aria-label="text.logout" @click="logout">
         <LogOut :size="56" :stroke-width="1.9" aria-hidden="true" />
       </button>
     </header>
 
     <main class="import-main">
-      <h1 id="page-title" ref="pageHeading" tabindex="-1">Zorgbehandelingenbestand importeren</h1>
+      <h1 id="page-title" ref="pageHeading" tabindex="-1">{{ text.title }}</h1>
       <p class="import-introduction">
-        Selecteer het aangeleverde bestand om de behandelcodes beschikbaar te maken voor het systeem.
+        {{ text.introduction }}
       </p>
 
       <form class="import-card" :aria-busy="isLoading" @submit.prevent="importFile" novalidate>
-        <label class="file-label" for="treatment-code-file">Excel-bestand</label>
+        <label class="file-label" for="treatment-code-file">{{ text.fileLabel }}</label>
         <input
           id="treatment-code-file"
           ref="fileInput"
@@ -177,7 +180,7 @@ async function importFile() {
 
         <div class="file-selection">
           <span id="selected-treatment-code-file" class="selected-file" :class="{ 'has-file': selectedFile }" aria-live="polite">
-            {{ selectedFile?.name || '[Bestandsnaam]' }}
+            {{ selectedFile?.name || text.filePlaceholder }}
           </span>
           <button
             class="choose-file-button"
@@ -187,15 +190,15 @@ async function importFile() {
             :aria-describedby="`file-type-help selected-treatment-code-file${errorMessage ? ' import-feedback' : ''}`"
             @click="openFilePicker"
           >
-            Bestand kiezen
+            {{ text.chooseFile }}
           </button>
         </div>
 
-        <p id="file-type-help" class="file-help">Geaccepteerd bestandstype: Excel.</p>
+        <p id="file-type-help" class="file-help">{{ text.fileTypeHelp }}</p>
 
         <button class="import-button" type="submit" :disabled="!canImport">
           <LoaderCircle v-if="isLoading" class="loading-icon" :size="26" aria-hidden="true" />
-          {{ isLoading ? 'Bezig met importeren...' : 'Importeren' }}
+          {{ isLoading ? text.importInProgress : text.submitButton }}
         </button>
       </form>
 
@@ -212,11 +215,11 @@ async function importFile() {
         <div class="feedback-heading">
           <CircleAlert v-if="errorMessage" :size="30" aria-hidden="true" />
           <Check v-else :size="30" aria-hidden="true" />
-          <h2 v-if="errorMessage" id="import-error-heading">Import niet geslaagd</h2>
-          <h2 v-else id="import-success-heading">Import geslaagd</h2>
+          <h2 v-if="errorMessage" id="import-error-heading">{{ text.importFailed }}</h2>
+          <h2 v-else id="import-success-heading">{{ text.importSucceeded }}</h2>
         </div>
         <p>{{ errorMessage || successMessage }}</p>
-        <button v-if="loginRequired" class="login-again-button" type="button" @click="logout">Opnieuw inloggen</button>
+        <button v-if="loginRequired" class="login-again-button" type="button" @click="logout">{{ text.loginAgain }}</button>
       </section>
     </main>
   </div>

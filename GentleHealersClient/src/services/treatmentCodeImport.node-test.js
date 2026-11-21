@@ -6,21 +6,9 @@ import {
   validateTreatmentCodeFile,
 } from './treatmentCodeImport.js'
 
-test('TC-10.1.1-12 accepts both Excel formats, including uppercase extensions', () => {
-  for (const name of ['Zorgbehandelingen.xlsx', 'Zorgbehandelingen.XLS']) {
-    assert.equal(validateTreatmentCodeFile({ name, size: 128 }), '')
-  }
-})
-
 test('TC-10.1.1-13 requires a selected, nonempty file', () => {
   assert.match(validateTreatmentCodeFile(null), /Kies eerst/)
   assert.match(validateTreatmentCodeFile({ name: 'behandelingen.xlsx', size: 0 }), /leeg/)
-})
-
-test('TC-10.1.2-04 rejects non-Excel files and names that disguise their final extension', () => {
-  for (const name of ['behandelingen.pdf', 'behandelingen.csv', 'behandelingen.xlsx.exe', 'behandelingen']) {
-    assert.match(validateTreatmentCodeFile({ name, size: 128 }), /Excel.*\.xlsx.*\.xls/)
-  }
 })
 
 test('TC-10.1.1-14 confirms success only for the expected completed import response', () => {

@@ -268,7 +268,7 @@ public sealed class TreatmentCodeImportTests
     }
 
     // A real minimal OpenXML workbook, so parsing tests exercise ExcelDataReader rather than mocks.
-    private static MemoryStream CreateWorkbook(params object[][] rows)
+    internal static MemoryStream CreateWorkbook(params object[][] rows)
     {
         var stream = new MemoryStream();
         using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))

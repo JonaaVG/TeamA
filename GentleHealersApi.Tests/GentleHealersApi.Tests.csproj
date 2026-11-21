@@ -18,4 +18,9 @@
     <ProjectReference Include="..\GentleHealersApi\GentleHealersApi.csproj" />
   </ItemGroup>
 
+  <!-- The shared test branch may already provide the same Selenium dependency. -->
+  <ItemGroup Condition="'@(PackageReference->WithMetadataValue('Identity', 'Selenium.WebDriver'))' == ''">
+    <PackageReference Include="Selenium.WebDriver" Version="4.53.0" />
+  </ItemGroup>
+
 </Project>

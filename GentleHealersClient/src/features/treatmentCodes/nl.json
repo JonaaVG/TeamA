@@ -1,0 +1,41 @@
+{
+  "TreatmentCodeImportPage": {
+    "skipToContent": "Ga direct naar hoofdinhoud",
+    "openMenu": "Menu openen",
+    "closeMenu": "Menu sluiten",
+    "menu": "Menu",
+    "mainNavigation": "Hoofdnavigatie",
+    "dashboard": "Dashboard",
+    "title": "Zorgbehandelingenbestand importeren",
+    "brandFirst": "Zachte",
+    "brandSecond": "Heelmeesters",
+    "brandAriaLabel": "Zachte Heelmeesters, naar dashboard",
+    "administrator": "Systeembeheerder",
+    "administratorRole": "Rol: Systeembeheerder",
+    "accountNumber": "Gebruikersnummer {id}",
+    "logout": "Uitloggen uit de applicatie",
+    "introduction": "Selecteer het aangeleverde bestand om de behandelcodes beschikbaar te maken voor het systeem.",
+    "fileLabel": "Excel-bestand",
+    "filePlaceholder": "[Bestandsnaam]",
+    "chooseFile": "Bestand kiezen",
+    "fileTypeHelp": "Geaccepteerd bestandstype: Excel.",
+    "importInProgress": "Bezig met importeren...",
+    "submitButton": "Importeren",
+    "importFailed": "Import niet geslaagd",
+    "importSucceeded": "Import geslaagd",
+    "loginAgain": "Opnieuw inloggen"
+  },
+  "TreatmentCodeImport": {
+    "fileRequired": "Kies eerst een Excel-bestand om te importeren.",
+    "unsupportedFileType": "Kies een Excel-bestand (.xlsx of .xls). Andere bestandstypen worden niet geïmporteerd.",
+    "emptyFile": "Het bestand is leeg. Kies het aangeleverde Excel-bestand.",
+    "unconfirmedImport": "De server kon de import niet bevestigen. Probeer het opnieuw.",
+    "successfulImport": "Bestand is succesvol geïmporteerd.",
+    "expiredSession": "Je sessie is verlopen. Log opnieuw in om een bestand te importeren.",
+    "forbiddenImport": "Je hebt geen toestemming om behandelcodes te importeren. Dit kan alleen als systeembeheerder.",
+    "fileTooLarge": "Het bestand is te groot. Kies een kleiner Excel-bestand.",
+    "unreadableFile": "Het bestand kon niet worden ingelezen. Controleer of je het aangeleverde Excel-bestand hebt gekozen.",
+    "connectionError": "Er is geen verbinding met de server. Controleer je verbinding en probeer het opnieuw.",
+    "importFailed": "Importeren is niet gelukt. Probeer het opnieuw."
+  }
+}
