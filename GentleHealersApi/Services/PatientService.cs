@@ -16,109 +16,18 @@ namespace GentleHealersApi.Services
             _connectionFactory = connectionFactory;
         }
 
-        public async Task<PatientCreatedDto> AddPatientAsync(
-            CreatePatientDto dto,
-            int practitionerUserId)
+        public async Task<PatientCreatedDto> AddPatientAsync(CreatePatientDto dto, int practitionerUserId)
         {
-            // 1. Check the BSN
             if (!IsValidBsn(dto.Bsn))
-                throw new ArgumentException(
-                    "Het BSN is ongeldig volgens de elfproef.");
-
-            using var connection =
-                await _connectionFactory.GetConnectionAsync(
-                    practitionerUserId);
-
-            // 2. Find the practice ID for the practitioner
-            int practiceId;
-
-            var practiceQuery = @"
-                SELECT PracticeId
-                FROM dbo.GeneralPractitioner
-                WHERE UserId = @UserId";
-
-            using (var pCmd = new SqlCommand(practiceQuery, connection))
-            {
-                pCmd.Parameters.AddWithValue(
-                    "@UserId", practitionerUserId);
-
-                var result = await pCmd.ExecuteScalarAsync();
-
-                if (result == null)
-                    throw new UnauthorizedAccessException(
-                        "Huisarts niet gevonden of geen rechten.");
-
-                practiceId = Convert.ToInt32(result);
-            }
-
-            // 3. Check if the user exists and has the Patient role
-            var userQuery = @"
-                SELECT COUNT(1)
-                FROM dbo.AppUser u
-                INNER JOIN dbo.Role r ON u.RoleId = r.RoleId
-                WHERE u.UserId = @UserId
-                  AND r.Name = 'Patient'";
-
-            using (var userCmd = new SqlCommand(userQuery, connection))
-            {
-                userCmd.Parameters.AddWithValue("@UserId", dto.UserId);
-
-                int exists = Convert.ToInt32(
-                    await userCmd.ExecuteScalarAsync());
-
-                if (exists == 0)
-                    throw new ArgumentException(
-                        "De gebruiker bestaat niet of heeft geen Patient-rol.");
-            }
-
-            // 4. Check if the BSN already exists
-            if (await ExistsAsync(
-                connection,
-                "SELECT 1 FROM dbo.Patient WHERE Bsn = @Val",
-                "@Val",
-                dto.Bsn))
-            {
-                throw new InvalidOperationException(
-                    "Er bestaat al een patiënt met dit BSN.");
-            }
-
-            // 5. Create the Patient record
+                throw new ArgumentException("Het BSN is ongeldig volgens de elfproef.");
+            ValidateDateOfBirth(dto.DateOfBirth);
+            using var connection = await _connectionFactory.GetConnectionAsync(practitionerUserId);
             using var transaction = connection.BeginTransaction();
-
             try
             {
-                int newPatientId;
-
-                var insertPatientQuery = @"
-                    INSERT INTO dbo.Patient
-                        (UserId, PracticeId, Bsn, DateOfBirth)
-                    VALUES
-                        (@UserId, @PracticeId, @Bsn, @DateOfBirth);
-
-                    SELECT SCOPE_IDENTITY();";
-
-                using (var patCmd = new SqlCommand(
-                    insertPatientQuery, connection, transaction))
-                {
-                    patCmd.Parameters.AddWithValue("@UserId", dto.UserId);
-                    patCmd.Parameters.AddWithValue("@PracticeId", practiceId);
-                    patCmd.Parameters.AddWithValue("@Bsn", dto.Bsn);
-
-                    patCmd.Parameters.Add("@DateOfBirth", SqlDbType.Date)
-                        .Value = dto.DateOfBirth.ToDateTime(TimeOnly.MinValue);
-
-                    newPatientId = Convert.ToInt32(
-                        await patCmd.ExecuteScalarAsync());
-                }
-
+                var result = await AddPatientAsync(dto, practitionerUserId, connection, transaction);
                 await transaction.CommitAsync();
-
-                // 6. Return the created patient record
-                return new PatientCreatedDto
-                {
-                    PatientId = newPatientId,
-                    UserId = dto.UserId
-                };
+                return result;
             }
             catch
             {
@@ -127,20 +36,68 @@ namespace GentleHealersApi.Services
             }
         }
 
-        // Check if a record exists
-        private static async Task<bool> ExistsAsync(
-            SqlConnection conn,
-            string query,
-            string paramName,
-            object value)
+        public async Task<PatientCreatedDto> AddPatientAsync(
+            CreatePatientDto dto, int practitionerUserId,
+            SqlConnection connection, SqlTransaction transaction)
         {
-            using var cmd = new SqlCommand(query, conn);
+            if (!IsValidBsn(dto.Bsn))
+                throw new ArgumentException("Het BSN is ongeldig volgens de elfproef.");
+            ValidateDateOfBirth(dto.DateOfBirth);
+            // 2. PracticeId
+            int practiceId;
+            using (var pCmd = new SqlCommand(@"
+        SELECT PracticeId FROM dbo.GeneralPractitioner WHERE UserId = @UserId",
+                connection, transaction))
+            {
+                pCmd.Parameters.AddWithValue("@UserId", practitionerUserId);
+                var result = await pCmd.ExecuteScalarAsync();
+                if (result == null)
+                    throw new UnauthorizedAccessException("Huisarts niet gevonden of geen rechten.");
+                practiceId = Convert.ToInt32(result);
+            }
 
+            // 3. User bestaat + Patient-rol (ziet nu ook de net aangemaakte user, binnen dezelfde transactie)
+            using (var userCmd = new SqlCommand(@"
+        SELECT COUNT(1)
+        FROM dbo.AppUser u
+        INNER JOIN dbo.Role r ON u.RoleId = r.RoleId
+        WHERE u.UserId = @UserId AND r.Name = 'Patient'",
+                connection, transaction))
+            {
+                userCmd.Parameters.AddWithValue("@UserId", dto.UserId);
+                if (Convert.ToInt32(await userCmd.ExecuteScalarAsync()) == 0)
+                    throw new ArgumentException("De gebruiker bestaat niet of heeft geen Patient-rol.");
+            }
+
+            // 4. BSN bestaat al?
+            if (await ExistsAsync(connection, transaction,
+                "SELECT 1 FROM dbo.Patient WHERE Bsn = @Val", "@Val", dto.Bsn))
+                throw new InvalidOperationException("Er bestaat al een patiënt met dit BSN.");
+
+            // 5. Insert Patient
+            int newPatientId;
+            using (var patCmd = new SqlCommand(@"
+        INSERT INTO dbo.Patient (UserId, PracticeId, Bsn, DateOfBirth)
+        VALUES (@UserId, @PracticeId, @Bsn, @DateOfBirth);
+        SELECT SCOPE_IDENTITY();", connection, transaction))
+            {
+                patCmd.Parameters.AddWithValue("@UserId", dto.UserId);
+                patCmd.Parameters.AddWithValue("@PracticeId", practiceId);
+                patCmd.Parameters.AddWithValue("@Bsn", dto.Bsn);
+                patCmd.Parameters.Add("@DateOfBirth", SqlDbType.Date)
+                    .Value = dto.DateOfBirth.ToDateTime(TimeOnly.MinValue);
+                newPatientId = Convert.ToInt32(await patCmd.ExecuteScalarAsync());
+            }
+
+            return new PatientCreatedDto { PatientId = newPatientId, UserId = dto.UserId };
+        }
+
+        private static async Task<bool> ExistsAsync(
+            SqlConnection conn, SqlTransaction tx, string query, string paramName, object value)
+        {
+            using var cmd = new SqlCommand(query, conn, tx);
             cmd.Parameters.AddWithValue(paramName, value);
-
-            var result = await cmd.ExecuteScalarAsync();
-
-            return result != null;
+            return await cmd.ExecuteScalarAsync() != null;
         }
 
         // Dutch BSN validation using the 11-proof algorithm
@@ -163,6 +120,19 @@ namespace GentleHealersApi.Services
             sum -= (bsn[8] - '0');
 
             return sum > 0 && sum % 11 == 0;
+        }
+
+        private const int MaxAgeYears = 150;
+
+        private static void ValidateDateOfBirth(DateOnly dateOfBirth)
+        {
+            var today = DateOnly.FromDateTime(DateTime.Today);
+
+            if (dateOfBirth > today)
+                throw new ArgumentException("De geboortedatum mag niet in de toekomst liggen.");
+
+            if (dateOfBirth < today.AddYears(-MaxAgeYears))
+                throw new ArgumentException($"De geboortedatum mag niet meer dan {MaxAgeYears} jaar geleden zijn.");
         }
     }
 }

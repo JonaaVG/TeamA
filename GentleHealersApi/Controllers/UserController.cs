@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using GentleHealersApi.Services.Interfaces;
 using GentleHealersApi.DTOs.User;
+using Microsoft.AspNetCore.Authorization;
 using GentleHealersApi.Extensions;
 using GentleHealersApi.Services.Email;
 using GentleHealersApi.Services;
 using GentleHealersApi.DTOs;
+using GentleHealersApi.Exceptions;
 
 
 
@@ -16,12 +18,18 @@ namespace GentleHealersApi.Controllers
     {
         private readonly IUserService _userService;
         private readonly IEmailService _emailService;
-        public UserController(IUserService userService, IEmailService emailService)
+        private readonly ILogger<UserController> _logger;
+        public UserController(
+            IUserService userService,
+            IEmailService emailService,
+            ILogger<UserController> logger)
         {
             _userService = userService;
             _emailService = emailService;
+            _logger = logger;
         }
 
+        [Authorize(Roles = "GeneralPractitioner, SystemAdministrator")]
         [HttpPost("create")]
         [ProducesResponseType(typeof(UserCreatedDto), StatusCodes.Status201Created)]
         public async Task<ActionResult<UserCreatedDto>> CreateUser([FromBody] CreateUserDto dto)
@@ -39,11 +47,16 @@ namespace GentleHealersApi.Controllers
                         created.ActivationLink,
                         dto.RoleName));
                 }
-                catch
+                catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to send activation email to {Email}", created.Email);
                 }
 
                 return Created($"/api/users/{created.UserId}", created);
+            }
+            catch (EmailDeliveryException ex)
+            {
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, new { message = ex.Message });
             }
             catch (ArgumentException ex)
             {
@@ -55,6 +68,7 @@ namespace GentleHealersApi.Controllers
             }
         }
 
+        [AllowAnonymous]
         [HttpPost("validate-activation-token")]
         public async Task<ActionResult<bool>> ValidateActivationToken(ValidateTokenDto dto)
         {
@@ -68,6 +82,7 @@ namespace GentleHealersApi.Controllers
             return Ok(isValid);
         }
 
+        [AllowAnonymous]
         [HttpPost("set-password")]
         public async Task<IActionResult> SetPassword([FromBody] SetPasswordDto dto)
         {
