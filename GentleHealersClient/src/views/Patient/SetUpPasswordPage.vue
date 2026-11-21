@@ -1,10 +1,12 @@
 <script setup>
 import {useRoute, useRouter} from 'vue-router'
 import {ref, onMounted} from 'vue'
+import nl from '../../services/nl.json'
 
+const translations = nl.SetUpPasswordPage
 const route = useRoute();
 const router = useRouter();
-const status = ref('Bezig met activeren...')
+const status = ref(translations.checkingStatus)
 
 var token = route.query.token
 var email = route.query.email
@@ -15,7 +17,7 @@ const isDone = ref(false)
 
 onMounted(async() => {
     if (!token || !email) {
-        status.value = 'ongeldige activatielink'
+        status.value = translations.invalidLinkStatus
         isChecking.value = false
         return
     }
@@ -30,13 +32,13 @@ onMounted(async() => {
             })
         })
         if (!response.ok) {
-            throw new Error ('Activatie mislukt')
+            throw new Error(translations.activationFailed)
         }
 
-        status.value = 'je account is succesvol geactiveerd'
+        status.value = translations.activatedStatus
         isValid.value = true
     } catch (error) {
-        status.value = 'de activatielink is ongeldig of verlopen'
+        status.value = translations.invalidOrExpiredStatus
     } finally {
         isChecking.value = false
     }
@@ -54,17 +56,17 @@ async function setPassword() {
     succesmessage.value = ''
 
     if (!password.value || !confirmpassword.value) {
-        errormessage.value = 'Vul beide wachtwoordvelden in'
+        errormessage.value = translations.requiredFields
         return
     }
 
     if(password.value !== confirmpassword.value) {
-        errormessage.value = 'De wachtwoorden komen niet overeen'
+        errormessage.value = translations.passwordMismatch
         return
     }
 
     if (!isValid.value) {
-        errormessage.value = 'Je activaitelink is ongeldig'
+        errormessage.value = translations.invalidActivationLink
         return
     }
 
@@ -83,19 +85,15 @@ async function setPassword() {
         })
 
         if (!response.ok) {
-            throw new Error('Wachtwoord instellen is mislukt')
+            throw new Error(translations.setPasswordFailed)
         }
 
-        succesmessage.value = 'Je wachtwoord is succesvol ingesteld'
-        status.value = 'Account geactiveerd'
+        succesmessage.value = translations.passwordSetSuccess
+        status.value = translations.accountActivatedStatus
         isDone.value = true
 
-        // Na 3 seconden doorsturen naar de inlogpagina
-        setTimeout(() => {
-            router.push('/login')
-        }, 3000)
-    } catch (error) {
-        errormessage.value = error.message
+    } catch {
+        errormessage.value = translations.setPasswordFailed
     }
 
 }
@@ -106,17 +104,17 @@ async function setPassword() {
     <div class="w-full max-w-[530px] bg-white rounded-2xl shadow-sm border border-slate-300 px-8 py-10">
 
         <!-- Logo -->
-        <div class="text-center text-[1.75rem] font-bold tracking-tight" aria-label="Zachte Heelmeesters">
-            <span class="text-[#12376b]">Zachte</span>
-            <span class="text-[#0a76d8]">Heelmeesters</span>
+        <div class="text-center text-[1.75rem] font-bold tracking-tight" :aria-label="translations.brandAriaLabel">
+            <span class="text-[#12376b]">{{ translations.brandFirst }}</span>
+            <span class="text-[#0a76d8]">{{ translations.brandSecond }}</span>
         </div>
         <hr class="mb-6 mt-4 h-1 rounded-sm border-0 bg-[#e3eefb]" />
 
         <!-- Titel en subtitel -->
         <div v-if="!isDone" class="mb-6">
-        <h1 class="text-2xl font-bold text-[#123668]">Nieuw wachtwoord</h1>
+        <h1 class="text-2xl font-bold text-[#123668]">{{ translations.title }}</h1>
         <p class="text-sm text-[#123668] mt-1">
-            Kies een nieuw wachtwoord voor je account en bevestig het hieronder.
+            {{ translations.subtitle }}
         </p>
         </div>
 
@@ -126,9 +124,9 @@ async function setPassword() {
             role="alert"
             class="mb-5 p-5 bg-red-50 border-2 border-red-300 rounded-xl"
         >
-            <p class="font-semibold text-red-800">Er is iets misgegaan</p>
+            <p class="font-semibold text-red-800">{{ translations.invalidTitle }}</p>
             <p class="text-sm text-red-700 mt-1">
-                De activatielink is niet geldig of verlopen. Vraag een nieuwe activatielink aan.
+                {{ translations.invalidDescription }}
             </p>
         </div>
 
@@ -139,14 +137,11 @@ async function setPassword() {
             class="p-5 bg-green-50 border-2 border-green-300 rounded-xl"
         >
             <p class="font-semibold text-green-800">{{ succesmessage }}</p>
-            <p class="text-sm text-green-700 mt-1">
-                Je wordt doorgestuurd naar de inlogpagina...
-            </p>
             <RouterLink
                 to="/login"
                 class="inline-block mt-4 px-5 py-2 rounded-xl bg-[#123668] text-white font-semibold hover:bg-[#0d2a52] transition"
             >
-                Naar inloggen
+                {{ translations.loginLink }}
             </RouterLink>
         </div>
 
@@ -154,7 +149,7 @@ async function setPassword() {
 
             <!-- Nieuw wachtwoord -->
             <div v-if="isValid && !isDone" class="space-y-2">
-                <label for="password" class="block text-sm font-semibold text-[#123668]">Nieuw wachtwoord</label>
+                <label for="password" class="block text-sm font-semibold text-[#123668]">{{ translations.passwordLabel }}</label>
                 <div class="relative">
                 <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#123668]" viewBox="0 0 24 24" fill="currentColor">
                     <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3A5.25 5.25 0 0 0 12 1.5Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
@@ -164,11 +159,11 @@ async function setPassword() {
                     id="password"
                     v-model="password"
                     :type="showPassword ? 'text' : 'password'"
-                    placeholder="Wachtwoord"
+                    :placeholder="translations.passwordPlaceholder"
                     class="w-full pl-12 pr-12 py-3 rounded-xl border-2 border-[#123668] text-[#123668] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0a78d1]"
                 />
 
-                <button type="button" @click="showPassword = !showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#123668] transition">
+                <button type="button" @click="showPassword = !showPassword" :aria-label="showPassword ? translations.hidePassword : translations.showPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#123668] transition">
                     <!-- Doorgestreept oog: wachtwoord is verborgen -->
                     <svg v-if="!showPassword" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 3l18 18" />
@@ -186,7 +181,7 @@ async function setPassword() {
 
             <!-- Herhaal wachtwoord -->
             <div v-if="isValid && !isDone" class="space-y-2">
-                <label for="confirmPassword" class="block text-sm font-semibold text-[#123668]">Herhaal je wachtwoord</label>
+                <label for="confirmPassword" class="block text-sm font-semibold text-[#123668]">{{ translations.confirmPasswordLabel }}</label>
                 <div class="relative">
                 <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#123668]" viewBox="0 0 24 24" fill="currentColor">
                     <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3A5.25 5.25 0 0 0 12 1.5Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
@@ -196,11 +191,11 @@ async function setPassword() {
                     id="confirmPassword"
                     v-model="confirmpassword"
                     :type="showConfirmPassword ? 'text' : 'password'"
-                    placeholder="Wachtwoord"
+                    :placeholder="translations.passwordPlaceholder"
                     class="w-full pl-12 pr-12 py-3 rounded-xl border-2 border-[#123668] text-[#123668] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0a78d1]"
                 />
 
-                <button type="button" @click="showConfirmPassword = !showConfirmPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#123668] transition">
+                <button type="button" @click="showConfirmPassword = !showConfirmPassword" :aria-label="showConfirmPassword ? translations.hideConfirmPassword : translations.showConfirmPassword" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#123668] transition">
                     <!-- Doorgestreept oog: wachtwoord is verborgen -->
                     <svg v-if="!showConfirmPassword" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 3l18 18" />
@@ -222,7 +217,7 @@ async function setPassword() {
                 type="submit"
                 class="w-full mt-2 py-3 rounded-xl bg-[#123668] text-white text-xl font-semibold hover:bg-[#0d2a52] transition"
             >
-                Wachtwoord instellen
+                {{ translations.submitButton }}
             </button>
 
             <!-- Foutmelding -->
