@@ -18,6 +18,7 @@ namespace GentleHealersApi.Tests.PageObjects
         public void Login(string identifier, string password)
         {
             var wait = CreateWait();
+            wait.IgnoreExceptionTypes(typeof(StaleElementReferenceException));
 
             // Wait until the email input is visible on the login form
             var emailField = wait.Until(d =>
