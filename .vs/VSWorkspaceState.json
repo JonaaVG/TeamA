@@ -2,9 +2,11 @@
   "ExpandedNodes": [
     "",
     "\\GentleHealersApi.Tests",
+    "\\GentleHealersApi.Tests\\Epic 9 - Users- and authorisationmanagement",
+    "\\GentleHealersApi.Tests\\Epic 9 - Users- and authorisationmanagement\\US 9.1",
     "\\GentleHealersClient",
     "\\GentleHealersClient\\src"
   ],
-  "SelectedNode": "\\GentleHealersApi.Tests",
+  "SelectedNode": "\\GentleHealersApi.Tests\\Epic 9 - Users- and authorisationmanagement\\US 9.1\\US_9_1_CreatePatientTest.cs",
   "PreviewInSolutionExplorer": false
 }
