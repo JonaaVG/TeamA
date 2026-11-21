@@ -125,7 +125,7 @@ async function importFile() {
         </button>
         <nav v-if="menuOpen" id="import-navigation" ref="navigation" class="navigation-panel" :aria-label="text.mainNavigation">
           <RouterLink to="/" @click="closeMenus">{{ text.dashboard }}</RouterLink>
-          <RouterLink to="/admin/treatment-codes/import" @click="closeMenus">{{ text.title }}</RouterLink>
+          <RouterLink :to="{ name: 'treatment-code-import' }" @click="closeMenus">{{ text.title }}</RouterLink>
         </nav>
       </div>
 

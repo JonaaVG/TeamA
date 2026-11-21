@@ -46,6 +46,7 @@ public sealed class TreatmentCodeImportBrowserTests
         driver.FindElement(SubmitButton).Click();
         driver.FindElement(By.LinkText("Zorgbehandelingenbestand importeren")).Click();
         driver.FindElement(FileInput);
+        Assert.AreEqual("/beheer/zorgbehandelingen/importeren", new Uri(driver.Url).AbsolutePath);
     }
 
     [TestCleanup]

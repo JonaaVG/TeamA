@@ -1,7 +1,31 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { canImportTreatmentCodes, getTreatmentCodeClaims } from '@/features/treatmentCodes/access'
 import DashboardPage from '@/views/DashboardPage.vue'
 // Define the routes array first
 const routes = [
+  {
+    path: '/beheer/zorgbehandelingen/importeren',
+    name: 'treatment-code-import',
+    component: () => import('../views/TreatmentCodeImportPage.vue'),
+    meta: {
+      auth: true,
+      standaloneLayout: true,
+    },
+    beforeEnter: () => {
+      const token = localStorage.getItem('token')
+      if (!getTreatmentCodeClaims(token)) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('userRole')
+        return { name: 'login' }
+      }
+      if (!canImportTreatmentCodes(token)) return { name: 'dashboard' }
+      return true
+    },
+  },
+  {
+    path: '/admin/treatment-codes/import',
+    redirect: { name: 'treatment-code-import' },
+  },
   {
     path: '/',
     name: 'dashboard',
