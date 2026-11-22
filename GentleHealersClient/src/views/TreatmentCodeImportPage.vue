@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
-import { Check, ChevronDown, CircleAlert, LoaderCircle, LogOut, Menu } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Check, CircleAlert, LoaderCircle } from 'lucide-vue-next'
 import nl from '@/features/treatmentCodes/nl.json'
 import api from '@/services/api'
 import {
@@ -15,37 +15,13 @@ const text = nl.TreatmentCodeImportPage
 const router = useRouter()
 const fileInput = ref(null)
 const feedback = ref(null)
-const pageHeading = ref(null)
-const navigation = ref(null)
 const selectedFile = ref(null)
 const isLoading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 const loginRequired = ref(false)
-const menuOpen = ref(false)
-const accountOpen = ref(false)
 
 const canImport = computed(() => selectedFile.value && !validateTreatmentCodeFile(selectedFile.value) && !isLoading.value)
-
-function readCurrentUser() {
-  try {
-    const encoded = localStorage.getItem('token')?.split('.')[1]
-    if (!encoded) return {}
-    const base64 = encoded.replace(/-/g, '+').replace(/_/g, '/')
-    const bytes = Uint8Array.from(atob(base64), character => character.charCodeAt(0))
-    return JSON.parse(new TextDecoder().decode(bytes))
-  } catch {
-    return {}
-  }
-}
-
-const currentUser = readCurrentUser()
-const accountName = currentUser.name || currentUser.unique_name || currentUser.email
-  || currentUser['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress']
-  || text.administrator
-const accountId = currentUser.sub || currentUser.nameid
-  || currentUser['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
-const accountNumber = accountId ? text.accountNumber.replace('{id}', () => String(accountId)) : ''
 
 function selectFile(event) {
   selectedFile.value = event.target.files?.[0] || null
@@ -56,20 +32,6 @@ function selectFile(event) {
 
 function openFilePicker() {
   if (!isLoading.value) fileInput.value?.click()
-}
-
-async function toggleMenu() {
-  menuOpen.value = !menuOpen.value
-  accountOpen.value = false
-  if (menuOpen.value) {
-    await nextTick()
-    navigation.value?.querySelector('a')?.focus()
-  }
-}
-
-function closeMenus() {
-  menuOpen.value = false
-  accountOpen.value = false
 }
 
 function logout() {
@@ -105,63 +67,9 @@ async function importFile() {
 </script>
 
 <template>
-  <div class="treatment-import-page" @keydown.esc="closeMenus">
-    <a class="import-skip-link" href="#page-title" @click.prevent="pageHeading?.focus()">
-      {{ text.skipToContent }}
-    </a>
-
-    <header class="import-header">
-      <div class="menu-container">
-        <button
-          class="menu-toggle"
-          type="button"
-          :aria-label="menuOpen ? text.closeMenu : text.openMenu"
-          :aria-expanded="menuOpen"
-          aria-controls="import-navigation"
-          @click="toggleMenu"
-        >
-          <Menu :size="50" :stroke-width="2.3" aria-hidden="true" />
-          <span>{{ text.menu }}</span>
-        </button>
-        <nav v-if="menuOpen" id="import-navigation" ref="navigation" class="navigation-panel" :aria-label="text.mainNavigation">
-          <RouterLink to="/" @click="closeMenus">{{ text.dashboard }}</RouterLink>
-          <RouterLink :to="{ name: 'treatment-code-import' }" @click="closeMenus">{{ text.title }}</RouterLink>
-        </nav>
-      </div>
-
-      <RouterLink to="/" class="hospital-brand" :aria-label="text.brandAriaLabel">
-        <span>{{ text.brandFirst }}</span> <span class="brand-accent">{{ text.brandSecond }}</span>
-      </RouterLink>
-
-      <div class="account-container">
-        <button
-          type="button"
-          class="account-toggle"
-          :aria-expanded="accountOpen"
-          aria-controls="import-account"
-          @click="accountOpen = !accountOpen; menuOpen = false"
-        >
-          <span class="account-summary">
-            <span class="account-name" :title="accountName">{{ accountName }}</span>
-            <span v-if="accountNumber">{{ accountNumber }}</span>
-            <span v-if="accountName !== text.administrator">{{ text.administrator }}</span>
-          </span>
-          <ChevronDown :size="26" aria-hidden="true" />
-        </button>
-        <div v-if="accountOpen" id="import-account" class="account-panel">
-          <p>{{ accountName }}</p>
-          <p v-if="accountNumber">{{ accountNumber }}</p>
-          <p>{{ text.administratorRole }}</p>
-        </div>
-      </div>
-
-      <button type="button" class="logout-button" :aria-label="text.logout" @click="logout">
-        <LogOut :size="56" :stroke-width="1.9" aria-hidden="true" />
-      </button>
-    </header>
-
+  <div class="treatment-import-page">
     <main class="import-main">
-      <h1 id="page-title" ref="pageHeading" tabindex="-1">{{ text.title }}</h1>
+      <h1 id="page-title" tabindex="-1">{{ text.title }}</h1>
       <p class="import-introduction">
         {{ text.introduction }}
       </p>
@@ -236,7 +144,7 @@ async function importFile() {
 }
 
 .treatment-import-page {
-  min-height: 100svh;
+  min-height: calc(100svh - 60px);
   background: #eaf4fd;
   color: #12366a;
   font-family: 'TreatmentCodeInter', Arial, sans-serif;
@@ -251,157 +159,9 @@ async function importFile() {
   box-sizing: border-box;
 }
 
-.import-skip-link {
-  position: fixed;
-  z-index: 30;
-  top: 0;
-  left: 16px;
-  transform: translateY(-120%);
-  border: 2px solid #12366a;
-  padding: 14px;
-  background: white;
-  color: #12366a;
-  font-size: 18px;
-}
-
-.import-skip-link:focus {
-  transform: translateY(0);
-}
-
-.import-header {
-  display: grid;
-  grid-template-columns: 330px minmax(0, 1fr) 416px 136px;
-  min-height: 146px;
-  border-radius: 0 0 18px 18px;
-  background: white;
-  box-shadow: 0 3px 3px #00000030;
-}
-
-.import-header button,
 .import-main button {
   font: inherit;
   cursor: pointer;
-}
-
-.import-header button {
-  color: #12366a;
-}
-
-.menu-container,
-.account-container {
-  position: relative;
-}
-
-.menu-toggle {
-  display: flex;
-  align-items: center;
-  gap: 30px;
-  width: 100%;
-  min-height: 146px;
-  border: 0;
-  padding: 30px 38px;
-  background: transparent;
-  font-size: 40px !important;
-  font-weight: 700 !important;
-}
-
-.hospital-brand {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  flex-wrap: wrap;
-  column-gap: 10px;
-  padding: 20px 38px;
-  color: #12366a;
-  font-size: 40px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  text-decoration: none;
-}
-
-.brand-accent {
-  color: #0876d1;
-}
-
-.account-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  width: 100%;
-  height: 100%;
-  border: 1px solid #788ba6;
-  padding: 25px 20px 25px 48px;
-  background: transparent;
-  text-align: left;
-}
-
-.account-summary {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  font-size: 20px;
-  line-height: 1.2;
-}
-
-.account-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.account-toggle svg,
-.menu-toggle svg {
-  flex-shrink: 0;
-}
-
-.logout-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  padding: 20px;
-  background: transparent;
-}
-
-.navigation-panel,
-.account-panel {
-  position: absolute;
-  z-index: 10;
-  top: calc(100% + 8px);
-  left: 12px;
-  width: max-content;
-  max-width: min(430px, calc(100vw - 24px));
-  border: 1px solid #788ba6;
-  border-radius: 12px;
-  padding: 12px;
-  background: white;
-  box-shadow: 0 8px 20px #12366a20;
-  font-size: 18px;
-}
-
-.navigation-panel a {
-  display: block;
-  border-radius: 6px;
-  padding: 14px;
-  color: #12366a;
-  text-decoration: none;
-}
-
-.navigation-panel a:hover,
-.navigation-panel a.router-link-exact-active {
-  background: #eaf4fd;
-}
-
-.account-panel {
-  right: 12px;
-  left: auto;
-  padding: 20px;
-  overflow-wrap: anywhere;
-}
-
-.account-panel p {
-  margin: 0 0 8px;
 }
 
 .import-main {
@@ -552,8 +312,7 @@ async function importFile() {
   text-decoration: underline;
 }
 
-.treatment-import-page button:focus-visible,
-.treatment-import-page a:focus-visible {
+.treatment-import-page button:focus-visible {
   outline: 3px solid #0876d1;
   outline-offset: 4px;
 }
@@ -567,23 +326,10 @@ async function importFile() {
 }
 
 @media (max-width: 1250px) {
-  .import-header { grid-template-columns: 220px minmax(0, 1fr) 290px 96px; }
-  .menu-toggle { gap: 18px; padding-inline: 25px; font-size: 30px !important; }
-  .menu-toggle svg { width: 38px; }
-  .hospital-brand { padding-inline: 24px; font-size: 30px; }
-  .account-toggle { padding-inline: 22px; }
-  .account-summary { font-size: 18px; }
   .file-selection { gap: 30px; }
 }
 
 @media (max-width: 900px) {
-  .import-header { grid-template-columns: 160px minmax(0, 1fr) 76px; min-height: 100px; }
-  .menu-toggle { min-height: 100px; gap: 12px; padding-inline: 20px; font-size: 24px !important; }
-  .menu-toggle svg { width: 34px; }
-  .hospital-brand { justify-content: center; padding: 18px 12px; font-size: 28px; column-gap: 7px; }
-  .account-container { display: none; }
-  .logout-button { padding: 18px; }
-  .logout-button svg { width: 40px; }
   .import-main { padding: 38px 24px; }
   .import-main h1 { font-size: 34px; }
   .import-introduction { font-size: 21px; line-height: 1.3; }
@@ -599,13 +345,6 @@ async function importFile() {
 
 @media (max-width: 600px) {
   .treatment-import-page { font-size: 18px; }
-  .import-header { grid-template-columns: 60px minmax(0, 1fr) 60px; min-height: 78px; border-radius: 0 0 12px 12px; }
-  .menu-toggle { justify-content: center; min-height: 78px; padding: 14px; }
-  .menu-toggle span { display: none; }
-  .menu-toggle svg { width: 32px; height: 32px; }
-  .hospital-brand { padding: 12px 4px; font-size: 21px; column-gap: 5px; letter-spacing: -0.4px; }
-  .logout-button { padding: 15px; }
-  .logout-button svg { width: 32px; height: 32px; }
   .import-main { padding: 30px 16px; }
   .import-main h1 { font-size: 28px; overflow-wrap: anywhere; }
   .import-introduction { font-size: 18px; line-height: 1.4; }

@@ -37,6 +37,15 @@
             </RouterLink>
           </div>
         </details>
+
+        <RouterLink
+          v-if="canImportTreatmentCatalog"
+          class="nav-menu-link"
+          :to="{ name: 'treatment-code-import' }"
+          @click="close"
+        >
+          {{ nl.TreatmentCodeImportPage.title }}
+        </RouterLink>
       </template>
 
       <template #profile-panel="{ logout }">
@@ -62,6 +71,8 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopNavigation from '@/components/TopNavigation.vue'
+import { canImportTreatmentCodes } from '@/features/treatmentCodes/access'
+import nl from '@/features/treatmentCodes/nl.json'
 import { parseJwt } from '@/services/JwtParser.js'
 
 const route = useRoute()
@@ -120,6 +131,10 @@ const roleMenuSections = computed(() => {
 
 const showNavigation = computed(() =>
   Boolean(claims.value) && !['login', 'accessDenied'].includes(route.name),
+)
+
+const canImportTreatmentCatalog = computed(() =>
+  Boolean(claims.value) && canImportTreatmentCodes(localStorage.getItem('token')),
 )
 
 function handleLogout() {

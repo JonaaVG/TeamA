@@ -11,7 +11,6 @@ const routes = [
     component: () => import('../views/TreatmentCodeImportPage.vue'),
     meta: {
       auth: true,
-      standaloneLayout: true,
     },
     beforeEnter: () => {
       const token = localStorage.getItem('token')

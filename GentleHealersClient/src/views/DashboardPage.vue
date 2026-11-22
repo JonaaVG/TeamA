@@ -5,14 +5,6 @@
       <h1 id="page-title" tabindex="-1" class="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
         Testing Dashboard
     </h1>
-      <router-link
-        v-if="canImportTreatmentCatalog"
-        :to="{ name: 'treatment-code-import' }"
-        class="mt-6 inline-flex rounded-lg bg-[#12366a] px-5 py-3 font-semibold text-white hover:bg-[#0d2a54] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#12366a]"
-      >
-        {{ treatmentCodeText.title }}
-      </router-link>
-      
     </BaseCard>
 
     <!-- Dashboard Grid -->
@@ -25,15 +17,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import api from '@/services/api'
 import DataList from '@/components/base/DataList.vue'
-import { canImportTreatmentCodes } from '@/features/treatmentCodes/access'
-import nl from '@/features/treatmentCodes/nl.json'
-
-const treatmentCodeText = nl.TreatmentCodeImportPage
-const canImportTreatmentCatalog = computed(() => canImportTreatmentCodes(localStorage.getItem('token')))
-
 // Reactive state for user profile and dashboard widgets
 
 const isLoading = ref(true)

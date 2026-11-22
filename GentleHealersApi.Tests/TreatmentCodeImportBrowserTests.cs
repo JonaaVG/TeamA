@@ -11,6 +11,7 @@ public sealed class TreatmentCodeImportBrowserTests
 {
     private static readonly By FileInput = By.Id("treatment-code-file");
     private static readonly By SubmitButton = By.CssSelector("form button[type='submit']");
+    private static readonly By MenuButton = By.CssSelector("button[aria-controls='navigation-drawer']");
     private ChromeDriver? driver;
     private DirectoryInfo? testFiles;
 
@@ -44,9 +45,11 @@ public sealed class TreatmentCodeImportBrowserTests
         driver.FindElement(By.Id("email")).SendKeys(email);
         driver.FindElement(By.Id("password")).SendKeys(password);
         driver.FindElement(SubmitButton).Click();
+        driver.FindElement(MenuButton).Click();
         driver.FindElement(By.LinkText("Zorgbehandelingenbestand importeren")).Click();
         driver.FindElement(FileInput);
         Assert.AreEqual("/beheer/zorgbehandelingen/importeren", new Uri(driver.Url).AbsolutePath);
+        Assert.IsTrue(driver.FindElement(MenuButton).Displayed);
     }
 
     [TestCleanup]
