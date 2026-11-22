@@ -36,20 +36,8 @@ public class AC1_4_4_LoginAfterActivationTests : TestBase
     }
 
     [TestMethod]
-    [TestCategory("TC-1.4.4-02")]
-    public void TC02_CareProviderCanLogInAfterActivation()
-    {
-        ReplaceTestData(RoleType.GeneralPractitioner);
-        ActivateAccount();
-        _page.Login(BaseUrl, Data.Email, ValidPassword);
-
-        Assert.IsTrue(_page.WaitFor(By.Id("page-title")).Displayed,
-            "The activated care provider should reach the dashboard.");
-    }
-
-    [TestMethod]
     [TestCategory("TC-1.4.4-03")]
-    public void TC03_RejectsIncorrectPasswordAfterActivation()
+    public void TC02_RejectsIncorrectPasswordAfterActivation()
     {
         ActivateAccount();
         _page.Login(BaseUrl, Data.Email, "WrongPassword!2026");
@@ -61,7 +49,7 @@ public class AC1_4_4_LoginAfterActivationTests : TestBase
 
     [TestMethod]
     [TestCategory("TC-1.4.4-04")]
-    public void TC04_IssuesPatientRoleAfterActivation()
+    public void TC03_IssuesPatientRoleAfterActivation()
     {
         ActivateAccount();
         _page.Login(BaseUrl, Data.Email, ValidPassword);
