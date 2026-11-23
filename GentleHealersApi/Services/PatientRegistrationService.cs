@@ -23,7 +23,7 @@ namespace GentleHealersApi.Services
         public async Task<(UserCreatedDto User, PatientCreatedDto Patient)> RegisterPatientAsync(
             RegisterPatientDto dto, int practitionerUserId)
         {
-            using var connection = await _connectionFactory.GetAuthenticatedConnectionAsync(practitionerUserId);
+            using var connection = await _connectionFactory.GetConnectionAsync(practitionerUserId);
             using var transaction = connection.BeginTransaction();
             try
             {

@@ -69,6 +69,15 @@ const routes = [
   component: () => import('../views/AccessDeniedPage.vue'),
   meta: { auth: true },
 }
+  {
+    path: '/activeer',
+    name: 'setuppassword',
+    component: () => import('../views/Patient/SetUpPasswordPage.vue'),
+    meta: {
+      auth: false
+    }
+  },
+  
 ]
 
 const router = createRouter({
