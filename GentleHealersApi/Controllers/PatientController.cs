@@ -36,6 +36,7 @@ namespace GentleHealersApi.Controllers
         /// Creates a user account and a patient record in one go.
         /// If the patient record cannot be created, the user is not kept.
         /// </summary>
+        [Authorize(Roles = "GeneralPractitioner")]
         [HttpPost("register")]
         [ProducesResponseType(typeof(PatientCreatedDto), StatusCodes.Status201Created)]
         public async Task<ActionResult<PatientCreatedDto>> RegisterPatient(
@@ -83,6 +84,7 @@ namespace GentleHealersApi.Controllers
         /// <summary>
         /// Adds a patient record for an existing user.
         /// </summary>
+        [Authorize(Roles = "GeneralPractitioner")]
         [HttpPost]
         [ProducesResponseType(typeof(PatientCreatedDto), StatusCodes.Status201Created)]
         public async Task<ActionResult<PatientCreatedDto>> AddPatient(
