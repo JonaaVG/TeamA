@@ -1,0 +1,38 @@
+{
+  "search": {
+    "title": "Patiënt zoeken",
+    "placeholder": "Naam of BSN",
+    "searchLabel": "Zoek patiënt op naam of BSN",
+    "button": "Zoeken",
+    "buttonLoading": "Zoeken...",
+    "bsn": "BSN",
+    "dateOfBirth": "Geboortedatum",
+    "noResults": "Geen patiënten gevonden.",
+    "errors": {
+      "emptyQuery": "Vul een naam of BSN in.",
+      "generic": "Er is iets misgegaan bij het zoeken naar patiënten."
+    }
+  },
+  "referral": {
+    "title": "Doorverwijzing aanmaken",
+    "addCodePlaceholder": "Behandelcode toevoegen",
+    "addCodeLabel": "Behandelcode selecteren",
+    "addCodeButtonLabel": "Behandelcode toevoegen",
+    "removeCodeLabel": "Verwijder {code}",
+    "durationLabel": "Duur afspraak:",
+    "durationUnit": "{minutes} min",
+    "notesLabel": "Toelichting voor specialist (optioneel)",
+    "cancelButton": "Annuleren",
+    "submitButton": "Aanmaken",
+    "submitButtonLoading": "Bezig...",
+    "errors": {
+      "noTreatmentCodes": "Voeg minimaal één behandelcode toe.",
+      "generic": "Kon de doorverwijzing niet aanmaken."
+    }
+  },
+  "actions": {
+    "dossier": "Dossier",
+    "add": "Toevoegen",
+    "refer": "Doorverwijzen"
+  }
+}

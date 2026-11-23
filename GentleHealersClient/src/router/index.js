@@ -52,7 +52,24 @@ const routes = [
       roles: ['GeneralPractitioner']
     }
   },
-
+  {
+    path: '/patient/zoeken',
+    name: 'searchpatient',
+    component: () => import('../views/Patient/PatientSearchPage.vue'),
+    meta: {
+      auth: true,
+      roles: ['GeneralPractitioner', 'Nurse', 'Specialist', 'AdministrativeStaff']
+    }
+  },
+  {
+    path: '/patient/doorverwijzen',
+    name: 'patient-referral',
+    component: () => import('../views/Patient/PatientReferralPage.vue'),
+    meta: {
+      auth: true,
+      roles: ['GeneralPractitioner']
+    }
+  },
   {
     path: '/rol/management',
     name: 'rolManagement',
