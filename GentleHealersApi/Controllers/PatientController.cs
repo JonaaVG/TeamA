@@ -117,5 +117,33 @@ namespace GentleHealersApi.Controllers
                 return StatusCode(403, new { message = ex.Message });
             }
         }
+
+
+        /// <summary>
+        /// Searches patients by BSN (digits only) or by first/last name.
+        /// </summary>
+        [Authorize(Roles = "GeneralPractitioner,Nurse,Specialist")]
+        [HttpGet("search")]
+        [ProducesResponseType(typeof(IEnumerable<PatientSearchResultDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<PatientSearchResultDto>>> Search(
+            [FromQuery] string? query)
+        {
+            try
+            {
+                int userId = User.GetUserIdFromClaims();
+
+                var results = await _patientService.SearchPatientsAsync(query, userId);
+
+                return Ok(results);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
+            }
+        }
     }
 }

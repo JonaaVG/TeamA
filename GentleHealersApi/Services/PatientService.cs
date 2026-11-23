@@ -1,5 +1,5 @@
-
 using System.Data;
+using System.Text;
 using GentleHealersApi.DTOs.Patient;
 using GentleHealersApi.Extensions;
 using GentleHealersApi.Services.Interfaces;
@@ -9,6 +9,11 @@ namespace GentleHealersApi.Services
 {
     public class PatientService : IPatientService
     {
+        private const int MaxAgeYears = 150;
+        private const int MaxSearchResults = 20;
+        private const int MaxSearchTerms = 6;
+        private const int MaxTermLength = 50;
+
         private readonly ISqlConnectionFactory _connectionFactory;
 
         public PatientService(ISqlConnectionFactory connectionFactory)
@@ -92,6 +97,77 @@ namespace GentleHealersApi.Services
             return new PatientCreatedDto { PatientId = newPatientId, UserId = dto.UserId };
         }
 
+        /// <summary>
+        /// Searches patients by BSN (digits only) or by first/last name.
+        /// Which patients are visible is decided by the RLS policy on Patient table
+        /// </summary>
+        public async Task<IEnumerable<PatientSearchResultDto>> SearchPatientsAsync(string? query, int userId)
+        {
+            var q = query?.Trim() ?? string.Empty;
+
+            bool isBsn = q.All(char.IsAsciiDigit);
+            
+
+            using var connection = await _connectionFactory.GetAuthenticatedConnectionAsync(userId);
+            using var cmd = new SqlCommand { Connection = connection };
+            cmd.Parameters.Add("@Max", SqlDbType.Int).Value = MaxSearchResults;
+
+            // The SQL text only contains fixed fragments and parameter names;
+            // all user input goes through parameters.
+            var sql = new StringBuilder(@"
+        SELECT TOP (@Max) p.PatientId, u.FirstName, u.LastName, p.Bsn, p.DateOfBirth
+        FROM dbo.Patient p
+        INNER JOIN dbo.AppUser u ON u.UserId = p.UserId
+        WHERE ");
+
+            if (isBsn)
+            {
+                // Allow searching from 2 digits onwards using a parameterized LIKE query
+                var safeBsn = q.Length > 9 ? q[..9] : q;
+                sql.Append("p.Bsn LIKE @Bsn ESCAPE '\\'");
+                cmd.Parameters.Add("@Bsn", SqlDbType.NVarChar, 20).Value = $"%{EscapeLike(safeBsn)}%";
+            }
+            else
+            {
+                var terms = q.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)
+                             .Take(MaxSearchTerms)
+                             .Select(t => t.Length > MaxTermLength ? t[..MaxTermLength] : t)
+                             .ToArray();
+
+                for (int i = 0; i < terms.Length; i++)
+                {
+                    if (i > 0) sql.Append(" AND ");
+                    sql.Append($"(u.FirstName LIKE @T{i} ESCAPE '\\' OR u.LastName LIKE @T{i} ESCAPE '\\')");
+                    cmd.Parameters.Add($"@T{i}", SqlDbType.NVarChar, MaxTermLength * 2 + 2).Value =
+                        $"%{EscapeLike(terms[i])}%";
+                }
+            }
+
+            sql.Append(" ORDER BY u.LastName, u.FirstName");
+            cmd.CommandText = sql.ToString();
+
+            var results = new List<PatientSearchResultDto>();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                results.Add(new PatientSearchResultDto{
+                    PatientId = reader.GetInt32(reader.GetOrdinal("PatientId")),
+                    FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                    LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                    Bsn = reader.GetString(reader.GetOrdinal("Bsn")),
+                    DateOfBirth = DateOnly.FromDateTime(reader.GetDateTime(reader.GetOrdinal("DateOfBirth")))
+                });
+            }
+
+            return results;
+        }
+
+        private static string EscapeLike(string value) =>
+            value.Replace("\\", "\\\\")
+                 .Replace("%", "\\%")
+                 .Replace("_", "\\_")
+                 .Replace("[", "\\[");
+
         private static async Task<bool> ExistsAsync(
             SqlConnection conn, SqlTransaction tx, string query, string paramName, object value)
         {
@@ -121,8 +197,6 @@ namespace GentleHealersApi.Services
 
             return sum > 0 && sum % 11 == 0;
         }
-
-        private const int MaxAgeYears = 150;
 
         private static void ValidateDateOfBirth(DateOnly dateOfBirth)
         {

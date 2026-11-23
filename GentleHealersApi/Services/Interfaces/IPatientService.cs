@@ -16,5 +16,7 @@ namespace GentleHealersApi.Services.Interfaces
         Task<PatientCreatedDto> AddPatientAsync(
             CreatePatientDto dto, int practitionerUserId,
             SqlConnection connection, SqlTransaction transaction);
+
+        Task<IEnumerable<PatientSearchResultDto>> SearchPatientsAsync(string? query, int userId);
     }
 }
