@@ -1,8 +1,8 @@
 <template>
   <div class="app">
     <div class="content">
-      <h1 id="page-title" tabindex="-1">Rollen en rechten</h1>
-      <p class="intro">Wijzig de rol van een bestaand gebruikersaccount.</p>
+      <h1 id="page-title" tabindex="-1">{{ text.title }}</h1>
+      <p class="intro">{{ text.introduction }}</p>
 
       <StatusMessage variant="success" :empty="!successMessage">
         {{ successMessage }}
@@ -12,22 +12,22 @@
       </StatusMessage>
 
       <div class="search-bar">
-        <label for="user-search">Zoek gebruiker op naam</label>
+        <label for="user-search">{{ text.searchLabel }}</label>
         <input
           id="user-search"
           v-model="searchQuery"
           type="search"
-          placeholder="Typ een voor- of achternaam"
+          :placeholder="text.searchPlaceholder"
           autocomplete="off"
         />
       </div>
 
       <section class="user-list" aria-labelledby="users-heading">
-        <h2 id="users-heading" class="visually-hidden">Gebruikers en huidige rollen</h2>
+        <h2 id="users-heading" class="visually-hidden">{{ text.usersHeading }}</h2>
         <div class="list-heading">
-          <span>Gebruiker</span>
-          <span>Huidige rol</span>
-          <span>Accountstatus</span>
+          <span>{{ text.userColumn }}</span>
+          <span>{{ text.roleColumn }}</span>
+          <span>{{ text.accountStatusColumn }}</span>
           <span></span>
           <span></span>
         </div>
@@ -38,7 +38,7 @@
             <span>{{ user.email }}</span>
           </div>
 
-          <select v-model="user.roleId" :aria-label="`Rol voor ${user.firstName} ${user.lastName}`">
+          <select v-model="user.roleId" :aria-label="format(text.roleForUser, { name: fullName(user) })">
           <option v-for="role in roles" :key="role.roleId" :value="role.roleId">
             {{ role.name }}
           </option>
@@ -53,28 +53,30 @@
 
         <ActionButton
           variant="primary"
-          :aria-label="`Rol wijzigen voor ${user.firstName} ${user.lastName}`"
+          :aria-label="format(text.changeRoleForUser, { name: fullName(user) })"
           @click="changeRole(user)"
         >
-          Rol wijzigen
+          {{ text.changeRole }}
         </ActionButton>
+          <span v-if="user.status === 'Invited'">{{ text.pendingActivation }}</span>
           <ActionButton
+            v-else
             :variant="user.status === 'Active' ? 'danger' : 'primary'"
             :disabled="updatingUserId === user.userId"
             @click="toggleAccountStatus(user)"
           >
             {{
               updatingUserId === user.userId
-                ? 'Bezig...'
+                ? text.busy
                 : user.status === 'Active'
-                  ? 'Account deactiveren'
-                  : 'Account activeren'
+                  ? text.deactivateAccount
+                  : text.activateAccount
             }}
           </ActionButton>
         </div>
 
         <p v-if="filteredUsers.length === 0" class="empty-state">
-          {{ searchQuery.trim() ? 'Geen gebruikers gevonden met deze naam.' : 'Er zijn geen gebruikers beschikbaar.' }}
+          {{ searchQuery.trim() ? text.noUsersMatchingSearch : text.noUsersAvailable }}
         </p>
       </section>
     </div>
@@ -86,6 +88,7 @@ import { computed, onMounted, ref } from 'vue'
 import api from '@/services/api'
 import ActionButton from '@/components/ActionButton.vue'
 import StatusMessage from '@/components/StatusMessage.vue'
+import text from '@/features/roleManagement/nl.json'
 
 const roles = ref([])
 const users = ref([])
@@ -105,13 +108,21 @@ const filteredUsers = computed(() => {
 
 function statusLabel(status) {
   const labels = {
-    Active: 'Actief',
-    Inactive: 'Inactief',
-    Blocked: 'Geblokkeerd',
-    Invited: 'Uitgenodigd',
+    Active: text.active,
+    Inactive: text.inactive,
+    Blocked: text.blocked,
+    Invited: text.invited,
   }
 
-  return labels[status] ?? status ?? 'Onbekend'
+  return labels[status] ?? status ?? text.unknownStatus
+}
+
+function fullName(user) {
+  return `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+}
+
+function format(template, values) {
+  return template.replace(/\{(\w+)\}/g, (_, key) => values[key] ?? '')
 }
 
 function normalizeName(value) {
@@ -131,7 +142,7 @@ onMounted(async () => {
     roles.value = rolesResponse.data
     users.value = usersResponse.data
   } catch (error) {
-    errorMessage.value = 'De gebruikers of rollen konden niet worden geladen. Controleer je verbinding en vernieuw de pagina.'
+    errorMessage.value = text.loadFailed
     console.error(error)
   }
 })
@@ -148,12 +159,11 @@ async function changeRole(user) {
 
     user.roleName = roles.value.find((role) => role.roleId === user.roleId)?.name ?? user.roleName
 
-    successMessage.value =
-  `De rol van ${user.firstName} ${user.lastName} is succesvol gewijzigd.` 
+    successMessage.value = format(text.roleChanged, { name: fullName(user) })
   } catch (error) {
     if (previousRoleId !== undefined) user.roleId = previousRoleId
     errorMessage.value =
-      error.response?.data || 'De rol kon niet worden gewijzigd. Probeer het opnieuw.'
+      error.response?.data || text.changeRoleFailed
     console.error(error)
   }
 }
@@ -171,11 +181,11 @@ async function toggleAccountStatus(user) {
 
     user.status = isActive ? 'Inactive' : 'Active'
     successMessage.value = isActive
-      ? `Het account van ${user.firstName} ${user.lastName} is gedeactiveerd.`
-      : `Het account van ${user.firstName} ${user.lastName} is geactiveerd.`
+      ? format(text.accountDeactivated, { name: fullName(user) })
+      : format(text.accountActivated, { name: fullName(user) })
   } catch (error) {
     errorMessage.value =
-      error.response?.data || 'De accountstatus kon niet worden gewijzigd.'
+      error.response?.data || text.changeAccountStatusFailed
   } finally {
     updatingUserId.value = null
   }

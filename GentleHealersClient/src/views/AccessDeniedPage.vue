@@ -7,23 +7,23 @@
       tabindex="-1"
       aria-describedby="access-description"
     >
-      Geen toegang
+      {{ text.title }}
     </h1>
 
     <p id="access-description" tabindex="0">
-      Uw account heeft geen systeembeheerrechten en kan deze pagina daarom
-      niet bekijken.
+      {{ text.description }}
     </p>
    
 
     <RouterLink class="back-button" to="/">
-      Terug naar mijn dashboard
+      {{ text.backToDashboard }}
     </RouterLink>
   </section>
 </template>
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue'
+import text from '@/features/accessDenied/nl.json'
 
 let focusTimer
 
