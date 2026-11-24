@@ -1,7 +1,7 @@
-using GentleHealersApi.DTOs;
+using GentleHealersApi.DTOs.TreatmentCode;
 using GentleHealersApi.Extensions;
-using GentleHealersApi.Services;
-using GentleHealersApi.Services.Interfaces;
+using GentleHealersApi.Services.TreatmentCode;
+using GentleHealersApi.Services.Interfaces.TreatmentCode;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -14,6 +14,7 @@ namespace GentleHealersApi.Controllers;
 public sealed class TreatmentCodesController(
     ITreatmentCodeImportService importService,
     ITreatmentCodeRepository repository,
+    ITreatmentCodeService treatmentCodeService,
     ILogger<TreatmentCodesController>? logger = null) : ControllerBase
 {
     [HttpPost("/api/admin/treatment-codes/import")]
@@ -60,5 +61,13 @@ public sealed class TreatmentCodesController(
             return StatusCode(StatusCodes.Status503ServiceUnavailable,
                 new TreatmentCodeImportError("De behandelcodes kunnen niet worden opgehaald. Probeer het later opnieuw."));
         }
+    }
+
+    [HttpGet("active")]
+    public async Task<ActionResult<IEnumerable<GetTreatmentCodeDto>>> GetActiveViaService()
+    {
+        var userId = User.GetUserIdFromClaims();
+        var codes = await treatmentCodeService.GetActiveTreatmentCodesAsync(userId);
+        return Ok(codes);
     }
 }

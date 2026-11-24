@@ -28,7 +28,9 @@
     "errors": {
       "noTreatmentCodes": "Voeg minimaal één behandelcode toe.",
       "generic": "Kon de doorverwijzing niet aanmaken."
-    }
+    },
+    "specialtyFilterLabel": "Filter op specialisme",
+    "allSpecialties": "Alle specialismen"
   },
   "actions": {
     "dossier": "Dossier",
