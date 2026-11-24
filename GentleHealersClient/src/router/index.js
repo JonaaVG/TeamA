@@ -62,7 +62,7 @@ const routes = [
     }
   },
   {
-    path: '/patient/doorverwijzen',
+    path: '/patient/:patientId/doorverwijzen',
     name: 'patient-referral',
     component: () => import('../views/Patient/PatientReferralPage.vue'),
     meta: {
