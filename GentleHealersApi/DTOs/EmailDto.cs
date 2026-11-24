@@ -3,7 +3,8 @@ namespace GentleHealersApi.DTOs
     public enum EmailType
     {
         Activation,
-        PasswordReset
+        PasswordReset,
+        Referral
     }
 
     public record EmailRequest(
@@ -11,7 +12,8 @@ namespace GentleHealersApi.DTOs
         string ToEmail,
         string FirstName,
         string Link,
-        string RoleName);
+        string RoleName,
+        IReadOnlyList<string>? ReferralCodes = null);
 
     public class EmailSettings
     {

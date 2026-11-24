@@ -63,7 +63,7 @@ builder.Services.AddScoped<ITreatmentCodeService, TreatmentCodeService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
-
+builder.Services.AddScoped<IReferralService, ReferralService>();
 var app = builder.Build();
 
 

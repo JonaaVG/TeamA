@@ -297,7 +297,7 @@ const handleSubmit = async () => {
 
     isSubmitting.value = true
     try {
-        await api.post(`/patient/${patientId.value}/referrals`, {
+        await api.post(`/referral/patient/${patientId.value}/referrals`, {
             referrals: pendingReferrals.value.map(r => ({
                 treatmentCodeId: r.treatmentCodeId,
                 durationMinutes: r.durationMinutes,
