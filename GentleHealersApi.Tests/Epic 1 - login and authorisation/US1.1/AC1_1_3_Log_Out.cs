@@ -28,6 +28,7 @@ public class AC1_1_3_Log_Out : TestBase
     [TestMethod]
     public void TC01_Log_Out_Successful()
     {
+        _logger.Info("Starting successful logout test.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
@@ -52,6 +53,7 @@ public class AC1_1_3_Log_Out : TestBase
     [TestMethod]
     public void TC02_Check_If_Session_Ended()
     {
+        _logger.Info("Starting session-expiration check after logout.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
@@ -75,6 +77,7 @@ public class AC1_1_3_Log_Out : TestBase
     [TestMethod]
     public void TC03_Direct_Back_After_Logout()
     {
+        _logger.Info("Starting browser-back navigation check after logout.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
@@ -98,6 +101,7 @@ public class AC1_1_3_Log_Out : TestBase
     [TestMethod]
     public void TC04_Open_Protected_Page_After_Logout()
     {
+        _logger.Info("Starting protected-page access check after logout.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
@@ -121,6 +125,7 @@ public class AC1_1_3_Log_Out : TestBase
     [TestMethod]
     public void TC05_Login_After_Logout()
     {
+        _logger.Info("Starting login-again-after-logout test.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));

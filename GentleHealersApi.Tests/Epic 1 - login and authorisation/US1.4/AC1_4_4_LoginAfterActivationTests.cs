@@ -28,6 +28,7 @@ public class AC1_4_4_LoginAfterActivationTests : TestBase
     [TestCategory("TC-1.4.4-01")]
     public void TC01_PatientCanLogInAfterActivation()
     {
+        _logger.Info("Starting patient login test after account activation.");
         ActivateAccount();
         _page.Login(BaseUrl, Data.Email, ValidPassword);
 
@@ -39,6 +40,7 @@ public class AC1_4_4_LoginAfterActivationTests : TestBase
     [TestCategory("TC-1.4.4-03")]
     public void TC02_RejectsIncorrectPasswordAfterActivation()
     {
+        _logger.Info("Starting incorrect-password rejection test after account activation.");
         ActivateAccount();
         _page.Login(BaseUrl, Data.Email, "WrongPassword!2026");
 
@@ -51,6 +53,7 @@ public class AC1_4_4_LoginAfterActivationTests : TestBase
     [TestCategory("TC-1.4.4-04")]
     public void TC03_IssuesPatientRoleAfterActivation()
     {
+        _logger.Info("Starting patient-role claim verification after activation.");
         ActivateAccount();
         _page.Login(BaseUrl, Data.Email, ValidPassword);
 
@@ -75,8 +78,10 @@ public class AC1_4_4_LoginAfterActivationTests : TestBase
 
     private void ActivateAccount()
     {
+        _logger.Info("Opening the activation page and submitting a valid password.");
         _page.Open(BaseUrl, Data.Email, Data.RawToken);
         _page.SetPassword(ValidPassword, ValidPassword);
         Assert.IsTrue(_page.WaitFor(By.CssSelector("[role='status']")).Displayed);
+        _logger.Info("Account activation succeeded.");
     }
 }

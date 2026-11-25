@@ -28,6 +28,7 @@ public class AC1_1_2_Failed_Login_Attempt : TestBase
     [TestMethod]
     public void TC01_Login_Invalid_Email()
     {
+        _logger.Info("Starting login test with an unknown email address.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
@@ -51,6 +52,7 @@ public class AC1_1_2_Failed_Login_Attempt : TestBase
     [TestMethod]
     public void TC02_Login_Invalid_Password()
     {
+        _logger.Info("Starting login test with an incorrect password.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
@@ -70,6 +72,7 @@ public class AC1_1_2_Failed_Login_Attempt : TestBase
     [TestMethod]
     public void TC03_Login_Invalid_Email_And_Password()
     {
+        _logger.Info("Starting login test with an unknown email and incorrect password.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
@@ -89,6 +92,7 @@ public class AC1_1_2_Failed_Login_Attempt : TestBase
     [TestMethod]
     public void TC04_Login_Empty_Email()
     {
+        _logger.Info("Starting login test with an empty email address.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
@@ -108,6 +112,7 @@ public class AC1_1_2_Failed_Login_Attempt : TestBase
     [TestMethod]
     public void TC05_Login_Empty_Password()
     {
+        _logger.Info("Starting login test with an empty password.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
@@ -127,6 +132,7 @@ public class AC1_1_2_Failed_Login_Attempt : TestBase
     [TestMethod]
     public void TC06_Login_Empty_Email_And_Password()
     {
+        _logger.Info("Starting login test with empty email and password fields.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));

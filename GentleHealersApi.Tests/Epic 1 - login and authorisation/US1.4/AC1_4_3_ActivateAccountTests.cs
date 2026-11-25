@@ -25,6 +25,7 @@ public class AC1_4_3_ActivateAccountTests : TestBase
     [TestCategory("TC-1.4.3-01")]
     public void TC01_ActivatesAccountAndLogsInWithNewPassword()
     {
+        _logger.Info("Starting account activation and subsequent login test.");
         ActivateAccount();
         _page.Login(BaseUrl, Data.Email, ValidPassword);
 
@@ -37,6 +38,7 @@ public class AC1_4_3_ActivateAccountTests : TestBase
     [TestCategory("TC-1.4.3-02")]
     public void TC02_MarksActivationTokenAsUsed()
     {
+        _logger.Info("Starting activation-token consumption test.");
         ActivateAccount();
         Assert.IsNotNull(Data.GetTokenUsedAt(), "The activation token must be marked as used.");
     }
@@ -45,6 +47,7 @@ public class AC1_4_3_ActivateAccountTests : TestBase
     [TestCategory("TC-1.4.3-03")]
     public void TC03_SetsAccountStatusToActive()
     {
+        _logger.Info("Starting account status activation test.");
         ActivateAccount();
         Assert.AreEqual("Active", Data.GetUserStatus());
     }
@@ -53,6 +56,7 @@ public class AC1_4_3_ActivateAccountTests : TestBase
     [TestCategory("TC-1.4.3-04")]
     public void TC04_DoesNotActivateAccountWithInvalidPassword()
     {
+        _logger.Info("Starting check that an invalid password cannot activate an account.");
         OpenActivationPage();
         _page.SetPassword("weak", "weak");
         AssertAccountRemainsInvited();
@@ -62,6 +66,7 @@ public class AC1_4_3_ActivateAccountTests : TestBase
     [TestCategory("TC-1.4.3-05")]
     public void TC05_DoesNotActivateAccountWithMismatchedPasswords()
     {
+        _logger.Info("Starting check that mismatched passwords cannot activate an account.");
         OpenActivationPage();
         _page.SetPassword(ValidPassword, "DifferentPassword!2026");
         AssertAccountRemainsInvited();
@@ -70,13 +75,19 @@ public class AC1_4_3_ActivateAccountTests : TestBase
     private ActivationTestData Data => _data
         ?? throw new InvalidOperationException("Activation test data was not created.");
 
-    private void OpenActivationPage() => _page.Open(BaseUrl, Data.Email, Data.RawToken);
+    private void OpenActivationPage()
+    {
+        _logger.Info("Opening the account activation page.");
+        _page.Open(BaseUrl, Data.Email, Data.RawToken);
+    }
 
     private void ActivateAccount()
     {
         OpenActivationPage();
+        _logger.Info("Submitting a valid password to activate the account.");
         _page.SetPassword(ValidPassword, ValidPassword);
         Assert.IsTrue(_page.WaitFor(By.CssSelector("[role='status']")).Displayed);
+        _logger.Info("Account activation succeeded.");
     }
 
     private void AssertAccountRemainsInvited()
@@ -84,5 +95,6 @@ public class AC1_4_3_ActivateAccountTests : TestBase
         Assert.IsTrue(_page.WaitFor(By.CssSelector("[role='alert']")).Displayed);
         Assert.AreEqual("Invited", Data.GetUserStatus());
         Assert.IsNull(Data.GetTokenUsedAt(), "A rejected password must not consume the activation token.");
+        _logger.Info("Check passed: invalid password left the account invited and token unused.");
     }
 }

@@ -28,6 +28,7 @@ public class AC1_1_1_Succesfull_Login : TestBase
     [TestMethod]
     public void TC01_LoginWithValidCredentials()
     {
+        _logger.Info("Starting valid login test.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
@@ -50,6 +51,7 @@ public class AC1_1_1_Succesfull_Login : TestBase
     [TestMethod]
     public void TC02_LoginWithCapitalizationInEmail()
     {
+        _logger.Info("Starting case-insensitive email login test.");
         _driver.Navigate().GoToUrl($"{BaseUrl}/login");
         var wait = new WebDriverWait(_driver, TimeSpan.FromSeconds(10));
         var EmailInput = _driver.FindElement(By.Id("email"));
