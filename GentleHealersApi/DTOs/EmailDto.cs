@@ -13,7 +13,9 @@ namespace GentleHealersApi.DTOs
         string FirstName,
         string Link,
         string RoleName,
-        IReadOnlyList<string>? ReferralCodes = null);
+        int? ReferralCount = null,
+        string Language = "nl"
+    );
 
     public class EmailSettings
     {

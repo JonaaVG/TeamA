@@ -25,6 +25,8 @@
     "cancelButton": "Annuleren",
     "submitButton": "Aanmaken",
     "submitButtonLoading": "Bezig...",
+    "success": "Doorverwijzing(en) succesvol aangemaakt en email is verstuurd",
+    "successEmailFailed": "Doorverwijzing(en) aangemaakt, maar de e-mail kon niet worden verzonden",
     "errors": {
       "noTreatmentCodes": "Voeg minimaal één behandelcode toe.",
       "generic": "Kon de doorverwijzing niet aanmaken."

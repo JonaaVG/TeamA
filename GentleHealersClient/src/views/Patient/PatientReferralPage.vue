@@ -159,9 +159,14 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Plus, Trash2 } from 'lucide-vue-next'
 import api from '@/services/api'
-import nl from '@/features/patients/nl.json'
+import nlPatients from '@/features/patients/nl.json'
+import nlShared from '@/features/shared/nl.json'
+import { useToast } from '@/features/shared/useToast.js'
 
-const t = nl.referral
+const { showToast } = useToast()
+
+const t = nlPatients.referral
+const tShared = nlShared
 
 const formatText = (template, vars = {}) =>
     Object.entries(vars).reduce(
@@ -297,15 +302,21 @@ const handleSubmit = async () => {
 
     isSubmitting.value = true
     try {
-        await api.post(`/referral/patient/${patientId.value}/referrals`, {
+        const { data } = await api.post(`/referral/patient/${patientId.value}/referrals`, {
             referrals: pendingReferrals.value.map(r => ({
                 treatmentCodeId: r.treatmentCodeId,
                 durationMinutes: r.durationMinutes,
                 notes: r.notes || null
             }))
         })
-        router.back()
+        if (data.emailSent) {
+            showToast(t.success, 'success')
+        } else {
+            showToast(t.successEmailFailed, 'warning')
+        }
+        router.push({ name: 'searchpatient' })
     } catch (error) {
+        console.error(error)
         errorMessage.value = error.response?.data?.message || t.errors.generic
     } finally {
         isSubmitting.value = false
