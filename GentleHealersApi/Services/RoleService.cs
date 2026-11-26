@@ -140,7 +140,8 @@ namespace GentleHealersApi.Services
             const string sql = """
         UPDATE dbo.AppUser
         SET Status = N'Active'
-        WHERE UserId = @UserId;
+        WHERE UserId = @UserId
+          AND Status IN (N'Inactive', N'Blocked');
         """;
 
             await using var command = new SqlCommand(sql, connection);
