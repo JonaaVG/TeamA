@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using GentleHealersApi.Services.Interfaces;
+using GentleHealersApi.Services.Interfaces.Patient;
 using Microsoft.AspNetCore.Authorization;
 using GentleHealersApi.DTOs;
 using GentleHealersApi.DTOs.Patient;

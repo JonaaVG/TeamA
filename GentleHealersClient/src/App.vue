@@ -121,9 +121,28 @@ const roleMenuSections = computed(() => {
     GeneralPractitioner: [
       {
         label: 'Patiënten',
-        items: [{ label: 'Patiënt toevoegen', to: '/patient/aanmaken' }],
+        items: [{ label: 'Patiënt toevoegen', to: '/patient/aanmaken' },
+                { label: 'Patiënt zoeken', to: '/patient/zoeken' }],
       },
     ],
+    Nurse: [
+      {
+        label: 'Patiënten',
+        items: [{ label: 'Patiënt zoeken', to: '/patient/zoeken' }],
+      },
+    ],
+    Specialist: [
+      {
+        label: 'Patiënten',
+        items: [{ label: 'Patiënt zoeken', to: '/patient/zoeken' }],
+      },
+    ],
+    AdministrativeStaff: [
+      {
+        label: 'Patiënten',
+        items: [{ label: 'Patiënt zoeken', to: '/patient/zoeken' }],
+      },
+    ]
   }
 
   return menus[userRole.value] ?? []
