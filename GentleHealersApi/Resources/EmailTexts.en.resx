@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- General -->
+  <data name="Greeting" xml:space="preserve">
+    <value>Dear {0},</value>
+  </data>
+  <data name="ButtonFallback" xml:space="preserve">
+    <value>Button not working? Copy this link into your browser:</value>
+  </data>
+
+  <!-- Account activation -->
+  <data name="Activation_Subject_Patient" xml:space="preserve">
+    <value>Invitation to the patient portal</value>
+  </data>
+  <data name="Activation_Subject_Staff" xml:space="preserve">
+    <value>Activate your account</value>
+  </data>
+  <data name="Activation_Title" xml:space="preserve">
+    <value>Activate account</value>
+  </data>
+  <data name="Activation_Intro_Patient" xml:space="preserve">
+    <value>Your GP has created an account for you in the patient portal. Click the button below to activate your account and set a password.</value>
+  </data>
+  <data name="Activation_Intro_Staff" xml:space="preserve">
+    <value>An account has been created for you. Click the button below to activate your account and set a password.</value>
+  </data>
+  <data name="Activation_Footer" xml:space="preserve">
+    <value>Didn't expect this invitation? You can ignore this email.</value>
+  </data>
+
+  <!-- Password reset -->
+  <data name="PasswordReset_Subject" xml:space="preserve">
+    <value>Change your password</value>
+  </data>
+  <data name="PasswordReset_Title" xml:space="preserve">
+    <value>Change your password</value>
+  </data>
+  <data name="PasswordReset_Intro" xml:space="preserve">
+    <value>A request was made to change your password. Click the button below to set a new password.</value>
+  </data>
+  <data name="PasswordReset_Button" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="PasswordReset_Footer" xml:space="preserve">
+    <value>Didn't request this? You can ignore this email, your password will remain unchanged.</value>
+  </data>
+
+  <!-- Referral -->
+  <data name="Referral_Subject" xml:space="preserve">
+    <value>Your GP has set up a referral for you</value>
+  </data>
+  <data name="Referral_Title" xml:space="preserve">
+    <value>Referral available</value>
+  </data>
+  <data name="Referral_Intro_Single" xml:space="preserve">
+    <value>Your GP has opened a referral for an appointment. Use the patient portal to book an appointment for it.</value>
+  </data>
+  <data name="Referral_Intro_Multiple" xml:space="preserve">
+    <value>Your GP has opened {0} referrals for appointments. Use the patient portal to book appointments for them.</value>
+  </data>
+  <data name="Referral_Count" xml:space="preserve">
+    <value>Number of referrals: {0}</value>
+  </data>
+  <data name="Referral_Button" xml:space="preserve">
+    <value>Go to the patient portal</value>
+  </data>
+  <data name="Referral_Footer" xml:space="preserve">
+    <value>Didn't expect this email? Please contact your GP.</value>
+  </data>
+</root>
