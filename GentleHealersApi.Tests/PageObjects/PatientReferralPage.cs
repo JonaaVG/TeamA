@@ -1,5 +1,6 @@
 using System.Globalization;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 
 namespace GentleHealersApi.Tests.PageObjects;
 
@@ -12,6 +13,7 @@ public sealed class PatientReferralPage : BasePage
     private static readonly By PendingTreatmentRows = By.CssSelector("tbody tr");
     private static readonly By SubmitReferralButton =
         By.XPath("//button[@type='button' and normalize-space()='Aanmaken']");
+    private static readonly By ErrorMessage = By.CssSelector("[role='alert']");
 
     public PatientReferralPage(IWebDriver driver) : base(driver)
     {
@@ -44,15 +46,31 @@ public sealed class PatientReferralPage : BasePage
         return patientId;
     }
 
+    public void NavigateToPatientReferral(string baseUrl, int patientId)
+    {
+        Driver.Navigate().GoToUrl(
+            $"{baseUrl.TrimEnd('/')}/patient/{patientId}/doorverwijzen");
+        WaitForTitle();
+    }
+
     public void AddTreatmentCode(int treatmentCodeId)
     {
+        string value = treatmentCodeId.ToString(CultureInfo.InvariantCulture);
         var select = CreateWait().Until(d =>
         {
-            var element = d.FindElement(TreatmentCodeSelect);
-            return element.Displayed && element.Enabled ? element : null;
+            try
+            {
+                var element = d.FindElement(TreatmentCodeSelect);
+                bool codeIsLoaded = element.FindElements(By.TagName("option"))
+                    .Any(option => option.GetAttribute("value") == value);
+                return element.Displayed && element.Enabled && codeIsLoaded ? element : null;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return null;
+            }
         });
 
-        string value = treatmentCodeId.ToString(CultureInfo.InvariantCulture);
         var option = select.FindElements(By.TagName("option"))
             .FirstOrDefault(element => element.GetAttribute("value") == value)
             ?? throw new NoSuchElementException($"Behandelcode met ID {value} staat niet in de keuzelijst.");
@@ -73,4 +91,31 @@ public sealed class PatientReferralPage : BasePage
         button.Click();
         CreateWait().Until(d => new Uri(d.Url).AbsolutePath == "/patient/zoeken");
     }
+
+    public ReferralSubmissionOutcome SubmitReferralAndWaitForOutcome()
+    {
+        var button = CreateWait().Until(d =>
+        {
+            var element = d.FindElement(SubmitReferralButton);
+            return element.Displayed && element.Enabled ? element : null;
+        });
+
+        button.Click();
+        var outcome = new WebDriverWait(Driver, TimeSpan.FromSeconds(30)).Until(d =>
+        {
+            if (new Uri(d.Url).AbsolutePath == "/patient/zoeken")
+            {
+                return new ReferralSubmissionOutcome(Succeeded: true, ErrorMessage: null);
+            }
+
+            var element = d.FindElements(ErrorMessage).FirstOrDefault(e => e.Displayed);
+            return string.IsNullOrWhiteSpace(element?.Text)
+                ? null
+                : new ReferralSubmissionOutcome(Succeeded: false, ErrorMessage: element.Text.Trim());
+        });
+
+        return outcome ?? throw new InvalidOperationException("De verwijzing gaf geen zichtbaar resultaat.");
+    }
 }
+
+public sealed record ReferralSubmissionOutcome(bool Succeeded, string? ErrorMessage);

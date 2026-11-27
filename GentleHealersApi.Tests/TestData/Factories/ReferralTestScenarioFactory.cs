@@ -67,6 +67,41 @@ public sealed class ReferralTestScenarioFactory
             treatmentCodeId);
     }
 
+    public ReferralTestScenario CreatePatientAtOtherPractice(
+        string firstName,
+        string lastName,
+        DateOnly dateOfBirth,
+        string ownPracticeName,
+        string otherPracticeName)
+    {
+        EnsureRequiredRolesExist();
+
+        var ownPractice = _practiceFactory.CreatePractice(CreateUniquePracticeName(ownPracticeName));
+        var practitioner = _userFactory.CreateGeneralPractitioner();
+        int practitionerProfileId = LinkPractitionerToPractice(practitioner.UserId, ownPractice.PracticeId);
+
+        var otherPractice = _practiceFactory.CreatePractice(CreateUniquePracticeName(otherPracticeName));
+        var otherPractitioner = _userFactory.CreateGeneralPractitioner();
+        LinkPractitionerToPractice(otherPractitioner.UserId, otherPractice.PracticeId);
+
+        int treatmentCodeId = GetImportedTreatmentCodeId(practitioner.UserId);
+        var patientUser = _userFactory.CreateUser(RoleType.Patient, prefix: "foreignpracticepatient");
+        var patient = CreatePatientForScenario(
+            patientUser.UserId,
+            otherPractice.PracticeId,
+            otherPractitioner.UserId,
+            dateOfBirth);
+        SetPatientName(patientUser.UserId, firstName, lastName);
+
+        return new ReferralTestScenario(
+            ownPractice,
+            practitioner,
+            practitionerProfileId,
+            patientUser,
+            patient,
+            treatmentCodeId);
+    }
+
     public int CountReferralsForPractitioner(int practitionerUserId)
     {
         const string sql = """
@@ -217,6 +252,12 @@ public sealed class ReferralTestScenarioFactory
         }
 
         return Convert.ToInt32(result);
+    }
+
+    private static string CreateUniquePracticeName(string baseName)
+    {
+        string suffix = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+        return $"{baseName} {suffix}";
     }
 }
 
