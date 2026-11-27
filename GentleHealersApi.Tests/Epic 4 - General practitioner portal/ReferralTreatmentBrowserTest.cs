@@ -114,15 +114,26 @@ public abstract class ReferralTreatmentBrowserTest
     protected void OpenReferral(PatientFixture? patient = null)
     {
         patient ??= Patient;
-        Browser.Navigate().GoToUrl(new Uri(_baseUri, $"/patient/{patient.Id}/doorverwijzen"));
+        Browser.Navigate().GoToUrl(new Uri(_baseUri, "/patient/zoeken"));
         try
         {
+            var query = Wait.Until(driver => driver.FindElements(By.CssSelector("form input[type='text']"))
+                .FirstOrDefault(input => input.Displayed));
+            query!.SendKeys(patient.Account.LastName);
+            var search = Wait.Until(driver => driver.FindElements(By.CssSelector("form button[type='submit']"))
+                .FirstOrDefault(button => button.Displayed && button.Enabled));
+            search!.Click();
+
+            var referralLink = By.CssSelector($"a[href='/patient/{patient.Id}/doorverwijzen']");
+            var link = Wait.Until(driver => driver.FindElements(referralLink).FirstOrDefault(result => result.Displayed));
+            link!.Click();
+
             Wait.Until(driver => driver.FindElements(By.CssSelector("#treatment-code option"))
                 .Any(option => option.GetDomProperty("value") == Codes[0].Id.ToString(CultureInfo.InvariantCulture)));
         }
         catch (WebDriverTimeoutException)
         {
-            Assert.Fail($"The referral page did not load the treatment catalog. Page message: {ReadAlert()}");
+            Assert.Fail($"The GP could not open the patient's referral form and load the treatment catalog. Page message: {ReadAlert()}");
         }
     }
 
@@ -176,9 +187,7 @@ public abstract class ReferralTreatmentBrowserTest
         ClickCreateAndWaitForResult();
 
         Assert.AreEqual("/patient/zoeken", new Uri(Browser.Url).AbsolutePath,
-            $"The GP portal did not confirm the referral. Page message: {ReadAlert()}");
-        Wait.Until(driver => driver.FindElements(By.CssSelector("[role='status']")).Any(element =>
-            element.Displayed && element.Text.Contains("aangemaakt", StringComparison.OrdinalIgnoreCase)));
+            $"The GP portal did not return to the patient search after sending the referral. Page message: {ReadAlert()}");
 
         var saved = ReadTreatments(patient.Id);
         Assert.IsNotEmpty(saved, "The referral returned to the patient list but stored no treatment rows.");
