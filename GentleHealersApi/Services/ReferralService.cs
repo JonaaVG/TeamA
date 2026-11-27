@@ -151,7 +151,7 @@ namespace GentleHealersApi.Services
         JOIN dbo.AppUser gpu            ON gpu.UserId = gp.UserId
         WHERE r.PatientId = @PatientId
           AND rt.Status = 'Open'
-          AND r.ExpiresAt > SYSUTCDATETIME()
+          AND r.ExpiresAt > CAST(SYSDATETIMEOFFSET() AT TIME ZONE 'W. Europe Standard Time' AS DATETIME2)
         ORDER BY r.ExpiresAt, rt.ReferralTreatmentId", connection);
 
             cmd.Parameters.AddWithValue("@PatientId", patientId);
