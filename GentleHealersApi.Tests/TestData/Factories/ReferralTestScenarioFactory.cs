@@ -6,8 +6,8 @@ using Microsoft.Data.SqlClient;
 namespace GentleHealersApi.Tests.TestData.Factories;
 
 /// <summary>
-/// Creates isolated, repeatable referral scenarios. Rows are intentionally retained in the
-/// test database, so BSNs, accounts, practices, specialties, and care codes are unique per run.
+/// Creates isolated, repeatable referral scenarios. Test accounts, practices, and patients are
+/// retained in the test database; referrals use an active treatment code from the imported list.
 /// </summary>
 public sealed class ReferralTestScenarioFactory
 {
@@ -36,7 +36,7 @@ public sealed class ReferralTestScenarioFactory
         var practitioner = _userFactory.CreateGeneralPractitioner();
         int practitionerProfileId = LinkPractitionerToPractice(practitioner.UserId, practice.PracticeId);
 
-        var treatmentCode = CreateTreatmentCode();
+        var treatmentCodeId = GetImportedTreatmentCodeId(practitioner.UserId);
 
         if (!createPatient)
         {
@@ -46,7 +46,7 @@ public sealed class ReferralTestScenarioFactory
                 practitionerProfileId,
                 null,
                 null,
-                treatmentCode.TreatmentCodeId);
+                treatmentCodeId);
         }
 
         var patientUser = _userFactory.CreateUser(RoleType.Patient, prefix: "referralpatient");
@@ -64,7 +64,7 @@ public sealed class ReferralTestScenarioFactory
             practitionerProfileId,
             patientUser,
             patient,
-            treatmentCode.TreatmentCodeId);
+            treatmentCodeId);
     }
 
     public int CountReferralsForPractitioner(int practitionerUserId)
@@ -193,37 +193,30 @@ public sealed class ReferralTestScenarioFactory
         };
     }
 
-    private (int TreatmentCodeId, string CareCode) CreateTreatmentCode()
+    private int GetImportedTreatmentCodeId(int practitionerUserId)
     {
-        string unique = Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
-        string specialtyName = $"Selenium {unique}";
-        string careCode = $"SEL-{unique}";
-
         using var connection = new SqlConnection(_connectionString);
         connection.Open();
+        SetSessionUser(connection, practitionerUserId);
 
-        int specialtyId;
-        using (var specialtyCommand = new SqlCommand(
-            "INSERT INTO dbo.Specialty (Name) OUTPUT INSERTED.SpecialtyId VALUES (@Name);", connection))
-        {
-            specialtyCommand.Parameters.Add("@Name", SqlDbType.NVarChar, 100).Value = specialtyName;
-            specialtyId = Convert.ToInt32(specialtyCommand.ExecuteScalar());
-        }
-
-        const string treatmentSql = """
-            INSERT INTO dbo.TreatmentCode
-                (CareCode, Description, SpecialtyId, DurationQuarters, Cost, IsActive)
-            OUTPUT INSERTED.TreatmentCodeId
-            VALUES (@CareCode, @Description, @SpecialtyId, 3, 0, 1);
+        const string sql = """
+            SELECT TOP (1) TreatmentCodeId
+            FROM dbo.TreatmentCode
+            WHERE IsActive = 1
+              AND ImportBatchId IS NOT NULL
+            ORDER BY CareCode, TreatmentCodeId DESC;
             """;
 
-        using var treatmentCommand = new SqlCommand(treatmentSql, connection);
-        treatmentCommand.Parameters.Add("@CareCode", SqlDbType.NVarChar, 30).Value = careCode;
-        treatmentCommand.Parameters.Add("@Description", SqlDbType.NVarChar, 255).Value = "Selenium doorverwijzingstest";
-        treatmentCommand.Parameters.Add("@SpecialtyId", SqlDbType.Int).Value = specialtyId;
-        int treatmentCodeId = Convert.ToInt32(treatmentCommand.ExecuteScalar());
+        using var command = new SqlCommand(sql, connection);
+        object? result = command.ExecuteScalar();
+        if (result is null or DBNull)
+        {
+            throw new InvalidOperationException(
+                "Er is geen actieve, geïmporteerde behandelcode gevonden in de testdatabase. " +
+                "Importeer eerst de zorgbehandelingscodes in de database uit appsettings.Testing.json.");
+        }
 
-        return (treatmentCodeId, careCode);
+        return Convert.ToInt32(result);
     }
 }
 
