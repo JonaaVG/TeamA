@@ -23,7 +23,7 @@ public abstract class ReferralTreatmentBrowserTest
     private static readonly By TreatmentSelector = By.Id("treatment-code");
     private static readonly By DurationSelector = By.Id("appointment-duration");
     private static readonly By NoteSelector = By.Id("specialist-notes");
-    private static readonly By FormAlert = By.CssSelector("form [role='alert']");
+    private static readonly By ReferralAlert = By.XPath("//p[@role='alert' and not(ancestor::form)]");
     private static readonly By DraftRows = By.CssSelector("tbody tr");
 
     private string _connectionString = null!;
@@ -137,7 +137,6 @@ public abstract class ReferralTreatmentBrowserTest
         Browser.FindElement(DurationSelector).GetDomProperty("value")!, CultureInfo.InvariantCulture);
 
     protected string CurrentNote => Browser.FindElement(NoteSelector).GetDomProperty("value") ?? "";
-    protected string DraftError => Browser.FindElements(FormAlert).FirstOrDefault()?.Text ?? "";
 
     protected void ChooseTreatment(TreatmentCode treatment) => ChooseOption(TreatmentSelector, treatment.Id);
 
@@ -174,19 +173,7 @@ public abstract class ReferralTreatmentBrowserTest
     protected IReadOnlyList<SavedTreatment> SubmitReferral(PatientFixture? patient = null)
     {
         patient ??= Patient;
-        Browser.FindElement(By.XPath("//button[normalize-space()='Aanmaken']")).Click();
-        var originalPath = $"/patient/{patient.Id}/doorverwijzen";
-        try
-        {
-            Wait.Until(driver => new Uri(driver.Url).AbsolutePath != originalPath ||
-                driver.FindElements(By.CssSelector("p[role='alert']")).Any(
-                    element => !string.IsNullOrWhiteSpace(element.Text) &&
-                        !element.FindElements(By.XPath("ancestor::form")).Any()));
-        }
-        catch (WebDriverTimeoutException)
-        {
-            Assert.Fail("Sending the referral did not produce a confirmation or a validation message.");
-        }
+        ClickCreateAndWaitForResult();
 
         Assert.AreEqual("/patient/zoeken", new Uri(Browser.Url).AbsolutePath,
             $"The GP portal did not confirm the referral. Page message: {ReadAlert()}");
@@ -198,6 +185,36 @@ public abstract class ReferralTreatmentBrowserTest
         TestContext.WriteLine($"Confirmed {saved.Count} saved referral treatment(s).");
         return saved;
     }
+
+    protected void AssertEmptyReferralRejected()
+    {
+        var originalUrl = Browser.Url;
+        ClickCreateAndWaitForResult();
+
+        Assert.AreEqual(originalUrl, Browser.Url, "The form must stay open after rejecting the referral.");
+        Assert.AreEqual("Voeg minimaal één behandelcode toe.", ReadReferralError(),
+            "The final submission must explain that a valid treatment code is required.");
+        Assert.IsEmpty(ReadTreatments(Patient.Id), "The rejected referral must not store any treatment codes.");
+    }
+
+    private void ClickCreateAndWaitForResult()
+    {
+        var originalUrl = Browser.Url;
+        Browser.FindElement(By.XPath("//button[normalize-space()='Aanmaken']")).Click();
+        try
+        {
+            Wait.Until(driver => driver.Url != originalUrl || ReadReferralError() is not null);
+        }
+        catch (WebDriverTimeoutException)
+        {
+            Assert.Fail("Sending the referral did not produce a confirmation or a validation message.");
+        }
+    }
+
+    private string? ReadReferralError() => Browser.FindElements(ReferralAlert)
+        .Where(element => element.Displayed)
+        .Select(element => element.Text)
+        .FirstOrDefault(message => !string.IsNullOrWhiteSpace(message));
 
     protected void CheckPatientBooking(SavedTreatment bookedTreatment, SavedTreatment otherTreatment)
     {

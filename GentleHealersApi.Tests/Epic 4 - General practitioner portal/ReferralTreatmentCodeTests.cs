@@ -65,9 +65,8 @@ public sealed class ReferralTreatmentCodeTests : ReferralTreatmentBrowserTest
         Assert.IsFalse(AvailableTreatmentCodes.Contains(unavailableCode),
             "An unavailable code should never be offered as a valid selection.");
         SaveDraft();
-        Assert.IsFalse(string.IsNullOrWhiteSpace(DraftError),
-            "The form should explain that a valid treatment selection is needed.");
-        Assert.AreEqual(0, Drafts().Count, "An unavailable code should not create a draft row.");
+        Assert.IsEmpty(Drafts(), "An unavailable code should not create a draft row.");
+        AssertEmptyReferralRejected();
 
         AddTreatment(validCode);
         var saved = SubmitReferral();
