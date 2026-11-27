@@ -26,8 +26,9 @@ public sealed class US_4_1_PatientReferralSeleniumTests : TestBase
         _loginPage = new LoginPage(_driver);
     }
 
-        [TestMethod]
-    [TestCategory("TC-1.1.1-01")]
+    [TestMethod]
+    [TestCategory("AC-4.1.1")]
+    [TestCategory("TC-1.1.1-01-Zoekbalk")]
     public void HuisartsKanPatientViaZoekbalkVindenEnDoorverwijzen()
     {
         _scenario = _scenarioFactory.Create(
@@ -51,7 +52,8 @@ public sealed class US_4_1_PatientReferralSeleniumTests : TestBase
     }
 
     [TestMethod]
-    [TestCategory("TC-1.1.1-02")]
+    [TestCategory("AC-4.1.1")]
+    [TestCategory("TC-1.1.1-02-Patientenlijst")]
     public void HuisartsKanPatientUitDePatientenlijstSelecteren()
     {
         _scenario = _scenarioFactory.Create(
@@ -73,7 +75,8 @@ public sealed class US_4_1_PatientReferralSeleniumTests : TestBase
     }
 
     [TestMethod]
-    [TestCategory("TC-1.1.1-03")]
+    [TestCategory("AC-4.1.1")]
+    [TestCategory("TC-1.1.1-03-Alternatieve-schrijfwijze")]
     public void HuisartsKanPatientMetAlternatieveSchrijfwijzeVinden()
     {
         _scenario = _scenarioFactory.Create(
@@ -95,7 +98,8 @@ public sealed class US_4_1_PatientReferralSeleniumTests : TestBase
     }
 
     [TestMethod]
-    [TestCategory("TC-1.1.1-04")]
+    [TestCategory("AC-4.1.1")]
+    [TestCategory("TC-1.1.1-04-Niet-bestaande-patient")]
     public void HuisartsKanGeenNietBestaandePatientDoorverwijzen()
     {
         _scenario = _scenarioFactory.Create(

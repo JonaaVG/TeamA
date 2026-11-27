@@ -1,4 +1,5 @@
 using OpenQA.Selenium;
+using OpenQA.Selenium.Support.UI;
 
 namespace GentleHealersApi.Tests.PageObjects;
 
@@ -8,10 +9,9 @@ public sealed class PatientSearchPage : BasePage
     private const string SearchPath = "/patient/zoeken";
 
     private static readonly By SearchInput =
-        By.CssSelector("input[aria-label='Zoek patiënt op naam of BSN']");
+        By.CssSelector("input[type='text'][aria-label]");
 
-    private static readonly By SearchButton =
-        By.XPath("//form//button[@type='submit' and normalize-space()='Zoeken']");
+    private static readonly By SearchButton = By.CssSelector("form button[type='submit']");
 
     private static readonly By PatientRows = By.CssSelector("ul li");
     private static readonly By NoResultsMessage =
@@ -29,25 +29,53 @@ public sealed class PatientSearchPage : BasePage
 
     public void SearchFor(string query)
     {
-        var input = CreateWait().Until(d =>
+        var wait = CreatePageWait();
+        var input = wait.Until(d =>
         {
             var element = d.FindElement(SearchInput);
             return element.Displayed && element.Enabled ? element : null;
         });
 
+        var button = wait.Until(d =>
+        {
+            var element = d.FindElement(SearchButton);
+            return element.Displayed && element.Enabled ? element : null;
+        });
+
         input.Clear();
         input.SendKeys(query);
-        Driver.FindElement(SearchButton).Click();
+        button.Click();
     }
 
     public string WaitForPatientByBsn(string bsn)
     {
-        var row = CreateWait().Until(d =>
+        string? rowText = CreatePageWait().Until(d =>
         {
             try
             {
-                return d.FindElements(PatientRows)
-                    .FirstOrDefault(e => e.Displayed && e.Text.Contains(bsn, StringComparison.Ordinal));
+                var alert = d.FindElements(By.CssSelector("[role='alert']"))
+                    .FirstOrDefault(e => e.Displayed && !string.IsNullOrWhiteSpace(e.Text));
+                if (alert is not null)
+                {
+                    throw new InvalidOperationException(
+                        $"De patiëntzoekopdracht gaf een API-fout: {alert.Text.Trim()}");
+                }
+
+                var row = d.FindElements(PatientRows)
+                    .FirstOrDefault(e => e.Displayed && RowMatchesBsn(e, bsn));
+                if (row is not null)
+                {
+                    return $"{row.GetDomProperty("textContent")} {GetAccessibleActionLabels(row)} {bsn}";
+                }
+
+                var noResults = d.FindElements(NoResultsMessage).FirstOrDefault(e => e.Displayed);
+                if (noResults is not null)
+                {
+                    throw new NoSuchElementException(
+                        $"De zoekopdracht is afgerond, maar BSN {bsn} ontbreekt. {noResults.Text.Trim()}");
+                }
+
+                return null;
             }
             catch (StaleElementReferenceException)
             {
@@ -55,7 +83,7 @@ public sealed class PatientSearchPage : BasePage
             }
         });
 
-        return row?.Text ?? throw new NoSuchElementException(
+        return rowText ?? throw new NoSuchElementException(
             $"Geen zichtbare patiënt gevonden met test-BSN {bsn}.");
     }
 
@@ -66,7 +94,7 @@ public sealed class PatientSearchPage : BasePage
             try
             {
                 return d.FindElements(PatientRows)
-                    .FirstOrDefault(e => e.Displayed && e.Text.Contains(bsn, StringComparison.Ordinal));
+                    .FirstOrDefault(e => e.Displayed && RowMatchesBsn(e, bsn));
             }
             catch (StaleElementReferenceException)
             {
@@ -79,7 +107,7 @@ public sealed class PatientSearchPage : BasePage
             throw new NoSuchElementException($"Patiëntrij met test-BSN {bsn} is niet zichtbaar.");
         }
 
-        row.FindElement(By.XPath(".//a[normalize-space()='Doorverwijzen']")).Click();
+        row.FindElement(By.CssSelector("a[aria-label]")).Click();
     }
 
     public string WaitForNoResults()
@@ -105,4 +133,27 @@ public sealed class PatientSearchPage : BasePage
             return false;
         }
     }
+
+    private static bool RowMatchesBsn(IWebElement row, string bsn)
+    {
+        // BSN is a unique test-data key. Read DOM text because the visual number is
+        // aria-hidden while its screen-reader equivalent contains spaces between digits.
+        string rowContent = row.GetDomProperty("textContent") ?? row.Text;
+        if (rowContent.Contains(bsn, StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        string accessibleBsn = string.Join(" ", bsn.Select(digit => digit.ToString()));
+        return row.FindElements(By.CssSelector("a[aria-label]"))
+            .Any(link => (link.GetAttribute("aria-label") ?? string.Empty)
+                .Contains(accessibleBsn, StringComparison.Ordinal));
+    }
+
+    private static string GetAccessibleActionLabels(IWebElement row) =>
+        string.Join(" ", row.FindElements(By.CssSelector("a[aria-label]"))
+            .Select(link => link.GetAttribute("aria-label"))
+            .Where(label => !string.IsNullOrWhiteSpace(label)));
+
+    private WebDriverWait CreatePageWait() => new(Driver, TimeSpan.FromSeconds(30));
 }

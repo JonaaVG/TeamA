@@ -27,6 +27,7 @@ public sealed class US_4_1_PracticeScopeSeleniumTests : TestBase
     }
 
     [TestMethod]
+    [TestCategory("AC-4.1.2")]
     [TestCategory("TC-1.1.1-01-Eigen-praktijk")]
     public void HuisartsKanPatientUitEigenPraktijkDoorverwijzen()
     {
@@ -65,6 +66,7 @@ public sealed class US_4_1_PracticeScopeSeleniumTests : TestBase
     }
 
     [TestMethod]
+    [TestCategory("AC-4.1.2")]
     [TestCategory("TC-1.1.1-02-Andere-praktijk")]
     public void HuisartsZietPatientUitAnderePraktijkNietInZoekresultaten()
     {
@@ -84,6 +86,7 @@ public sealed class US_4_1_PracticeScopeSeleniumTests : TestBase
     }
 
     [TestMethod]
+    [TestCategory("AC-4.1.2")]
     [TestCategory("TC-1.1.1-03-Andere-praktijk-weigeren")]
     public void HuisartsKanPatientUitAnderePraktijkNietDoorverwijzenViaDirecteLink()
     {

@@ -143,6 +143,24 @@ namespace GentleHealersApi.Services.Patient
                 }
             }
 
+            // Keep GP searches within the authenticated practitioner's own practice even
+            // when row-level security is not enabled in a local or test database.
+            sql.Append(@"
+        AND (
+            NOT EXISTS (
+                SELECT 1
+                FROM dbo.GeneralPractitioner ownGp
+                WHERE ownGp.UserId = @UserId
+            )
+            OR EXISTS (
+                SELECT 1
+                FROM dbo.GeneralPractitioner ownGp
+                WHERE ownGp.UserId = @UserId
+                  AND ownGp.PracticeId = p.PracticeId
+            )
+        )");
+            cmd.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+
             sql.Append(" ORDER BY u.LastName, u.FirstName");
             cmd.CommandText = sql.ToString();
 

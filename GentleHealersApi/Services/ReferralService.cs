@@ -59,9 +59,16 @@ namespace GentleHealersApi.Services
                     SELECT u.Email, u.FirstName
                     FROM dbo.Patient p
                     JOIN dbo.AppUser u ON u.UserId = p.UserId
-                    WHERE p.PatientId = @PatientId", connection, transaction))
+                    WHERE p.PatientId = @PatientId
+                      AND EXISTS (
+                          SELECT 1
+                          FROM dbo.GeneralPractitioner gp
+                          WHERE gp.UserId = @UserId
+                            AND gp.PracticeId = p.PracticeId
+                      )", connection, transaction))
                 {
                     cmd.Parameters.AddWithValue("@PatientId", patientId);
+                    cmd.Parameters.AddWithValue("@UserId", practitionerUserId);
                     using var reader = await cmd.ExecuteReaderAsync();
                     if (!await reader.ReadAsync())
                         throw new ArgumentException("Onbekende patiënt.");

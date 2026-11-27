@@ -63,7 +63,7 @@ describe('PatientSearchPage', () => {
   it('trims the search text and sends it to the patient search endpoint', async () => {
     wrapper = await mountPage()
 
-    await wrapper.get('input[aria-label="Zoek patiënt op naam of BSN"]').setValue('  Sanne Berg  ')
+    await wrapper.get('input[type="text"][aria-label]').setValue('  Sanne Berg  ')
     await wrapper.get('form').trigger('submit')
     await flushPromises()
 
