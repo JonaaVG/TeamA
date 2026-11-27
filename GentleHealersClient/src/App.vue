@@ -39,6 +39,24 @@
         </details>
 
         <RouterLink
+          v-if="userRole === 'Patient'"
+          class="nav-menu-link"
+          :to="{ name: 'patient-referral-booking' }"
+          @click="close"
+        >
+          {{ referralBookingText.title }}
+        </RouterLink>
+
+        <RouterLink
+          v-if="userRole === 'Specialist'"
+          class="nav-menu-link"
+          :to="{ name: 'specialist-appointments' }"
+          @click="close"
+        >
+          {{ specialistAppointmentsText.title }}
+        </RouterLink>
+
+        <RouterLink
           v-if="canImportTreatmentCatalog"
           class="nav-menu-link"
           :to="{ name: 'treatment-code-import' }"
@@ -71,6 +89,8 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TopNavigation from '@/components/TopNavigation.vue'
+import referralBookingText from '@/features/referralBooking/nl.json'
+import specialistAppointmentsText from '@/features/specialistAppointments/nl.json'
 import { canImportTreatmentCodes } from '@/features/treatmentCodes/access'
 import nl from '@/features/treatmentCodes/nl.json'
 import { parseJwt } from '@/services/JwtParser.js'

@@ -71,6 +71,18 @@ const routes = [
     }
   },
   {
+    path: '/patient/doorverwijzingen',
+    name: 'patient-referral-booking',
+    component: () => import('../views/Patient/PatientReferralBookingPage.vue'),
+    meta: { auth: true, roles: ['Patient'] },
+  },
+  {
+    path: '/specialist/afspraken',
+    name: 'specialist-appointments',
+    component: () => import('../views/Specialist/SpecialistAppointmentsPage.vue'),
+    meta: { auth: true, roles: ['Specialist'] },
+  },
+  {
     path: '/rol/management',
     name: 'rolManagement',
     component: () => import('../views/Systemadministrator/RolemanagementPage.vue'),

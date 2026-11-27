@@ -27,10 +27,24 @@
     "submitButtonLoading": "Bezig...",
     "errors": {
       "noTreatmentCodes": "Voeg minimaal één behandelcode toe.",
-      "generic": "Kon de doorverwijzing niet aanmaken."
+      "generic": "Kon de doorverwijzing niet aanmaken.",
+      "noTreatmentCode": "Kies een behandelcode."
     },
     "specialtyFilterLabel": "Filter op specialisme",
-    "allSpecialties": "Alle specialismen"
+    "allSpecialties": "Alle specialismen",
+    "addHeading": "Behandelcode toevoegen",
+    "editHeading": "Behandelcode aanpassen",
+    "addButton": "Toevoegen",
+    "updateButton": "Opslaan",
+    "cancelEditButton": "Bewerken annuleren",
+    "pendingHeading": "Gekozen behandelcodes",
+    "emptyList": "Er zijn nog geen behandelcodes toegevoegd.",
+    "colCode": "Behandelcode",
+    "colDuration": "Duur",
+    "colNotes": "Toelichting",
+    "colActions": "Acties",
+    "success": "Doorverwijzing aangemaakt en e-mail verzonden.",
+    "successEmailFailed": "Doorverwijzing aangemaakt. De e-mail kon niet worden verzonden."
   },
   "actions": {
     "dossier": "Dossier",

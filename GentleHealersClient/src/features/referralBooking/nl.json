@@ -1,0 +1,20 @@
+{
+  "title": "Doorverwijzingen",
+  "openTreatments": "Openstaande behandelingen",
+  "loadingTreatments": "Behandelingen worden geladen.",
+  "noTreatments": "Je hebt geen openstaande behandelingen.",
+  "loadTreatmentsError": "Je doorverwijzingen konden niet worden opgehaald. Probeer het opnieuw.",
+  "retry": "Opnieuw proberen",
+  "minutes": "minuten",
+  "book": "Afspraak inplannen",
+  "appointmentDay": "Datum",
+  "selectSlot": "Kies een tijdslot",
+  "loadingSlots": "Tijdsloten worden geladen.",
+  "noSlots": "Er zijn geen tijdsloten beschikbaar voor deze behandeling.",
+  "loadSlotsError": "De tijdsloten konden niet worden opgehaald. Probeer het opnieuw.",
+  "confirm": "Afspraak bevestigen",
+  "confirming": "Afspraak wordt bevestigd.",
+  "bookingError": "Je afspraak kon niet worden ingepland. Probeer het opnieuw.",
+  "cancel": "Annuleren",
+  "booked": "Je afspraak is ingepland."
+}

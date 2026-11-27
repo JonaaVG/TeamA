@@ -1,0 +1,8 @@
+{
+  "title": "Afspraken",
+  "loading": "Afspraken laden...",
+  "loadFailed": "De afspraken kunnen niet worden opgehaald. Probeer het later opnieuw.",
+  "empty": "Er zijn geen afspraken.",
+  "startTime": "Datum en tijd",
+  "note": "Toelichting"
+}

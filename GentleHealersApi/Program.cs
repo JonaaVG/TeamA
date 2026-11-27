@@ -60,6 +60,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPatientRegistrationService, PatientRegistrationService>();
 builder.Services.AddScoped<ISpecialtyService, SpecialtyService>();
 builder.Services.AddScoped<ITreatmentCodeService, TreatmentCodeService>();
+builder.Services.AddScoped<IReferralService, ReferralService>();
+builder.Services.AddScoped<ReferralBookingService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IRoleService, RoleService>();

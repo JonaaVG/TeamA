@@ -3,14 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import api from '@/services/api'
 import PatientReferralPage from '@/views/Patient/PatientReferralPage.vue'
 
-const { route, back } = vi.hoisted(() => ({
+const { route, push } = vi.hoisted(() => ({
   route: { params: { patientId: '101' } },
-  back: vi.fn(),
+  push: vi.fn(),
 }))
 
 vi.mock('vue-router', () => ({
   useRoute: () => route,
-  useRouter: () => ({ back }),
+  useRouter: () => ({ push }),
 }))
 
 vi.mock('@/services/api', () => ({
@@ -44,7 +44,7 @@ describe('Patient referral form in the GP portal', () => {
       if (url === '/specialties') return { data: specialties }
       throw new Error(`Unexpected GET ${url}`)
     })
-    api.post.mockResolvedValue({ status: 201 })
+    api.post.mockResolvedValue({ status: 201, data: { emailSent: true } })
     await openForm()
   })
 
@@ -71,7 +71,7 @@ describe('Patient referral form in the GP portal', () => {
   }
 
   function expectRequest(referrals, patientId = '101') {
-    expect(api.post).toHaveBeenLastCalledWith(`/patient/${patientId}/referrals`, { referrals })
+    expect(api.post).toHaveBeenLastCalledWith(`/referral/patient/${patientId}/referrals`, { referrals })
   }
 
   it('TC 4.2.1-01 shows one selected treatment and includes it in the request', async () => {
@@ -82,7 +82,7 @@ describe('Patient referral form in the GP portal', () => {
     await submitForm()
 
     expectRequest([{ treatmentCodeId: 1, durationMinutes: 30, notes: null }])
-    expect(back).toHaveBeenCalledOnce()
+    expect(push).toHaveBeenCalledWith({ name: 'searchpatient' })
   })
 
   it('TC 4.2.1-02 sends distinct selected codes in one request', async () => {
@@ -117,10 +117,11 @@ describe('Patient referral form in the GP portal', () => {
     expect(page.get('#treatment-code').text()).not.toContain('NIE03')
     await page.get('form').trigger('submit')
     expect(page.findAll('tbody tr')).toHaveLength(0)
+    expect(page.get('form [role="alert"]').text()).toBe('Kies een behandelcode.')
 
     await submitForm()
 
-    expect(page.get('[role="alert"]').text()).toBe('Voeg minimaal één behandelcode toe.')
+    expect(page.findAll('[role="alert"]').map(alert => alert.text())).toContain('Voeg minimaal één behandelcode toe.')
     expect(api.post).not.toHaveBeenCalled()
 
     await addTreatment(1)

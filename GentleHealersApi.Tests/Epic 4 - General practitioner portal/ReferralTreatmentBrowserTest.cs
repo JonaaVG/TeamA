@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using GentleHealersApi.Tests.PageObjects;
 using GentleHealersApi.Tests.TestData;
 using GentleHealersApi.Tests.TestData.Factories;
@@ -114,26 +113,15 @@ public abstract class ReferralTreatmentBrowserTest
     protected void OpenReferral(PatientFixture? patient = null)
     {
         patient ??= Patient;
-        Browser.Navigate().GoToUrl(new Uri(_baseUri, "/patient/zoeken"));
+        Browser.Navigate().GoToUrl(new Uri(_baseUri, $"/patient/{patient.Id}/doorverwijzen"));
         try
         {
-            var query = Wait.Until(driver => driver.FindElements(By.CssSelector("form input[type='text']"))
-                .FirstOrDefault(input => input.Displayed));
-            query!.SendKeys(patient.Account.LastName);
-            var search = Wait.Until(driver => driver.FindElements(By.CssSelector("form button[type='submit']"))
-                .FirstOrDefault(button => button.Displayed && button.Enabled));
-            search!.Click();
-
-            var referralLink = By.CssSelector($"a[href='/patient/{patient.Id}/doorverwijzen']");
-            var link = Wait.Until(driver => driver.FindElements(referralLink).FirstOrDefault(result => result.Displayed));
-            link!.Click();
-
             Wait.Until(driver => driver.FindElements(By.CssSelector("#treatment-code option"))
                 .Any(option => option.GetDomProperty("value") == Codes[0].Id.ToString(CultureInfo.InvariantCulture)));
         }
         catch (WebDriverTimeoutException)
         {
-            Assert.Fail($"The GP could not open the patient's referral form and load the treatment catalog. Page message: {ReadAlert()}");
+            Assert.Fail($"The referral page did not load the treatment catalog. Page message: {ReadAlert()}");
         }
     }
 
@@ -187,7 +175,9 @@ public abstract class ReferralTreatmentBrowserTest
         ClickCreateAndWaitForResult();
 
         Assert.AreEqual("/patient/zoeken", new Uri(Browser.Url).AbsolutePath,
-            $"The GP portal did not return to the patient search after sending the referral. Page message: {ReadAlert()}");
+            $"The GP portal did not confirm the referral. Page message: {ReadAlert()}");
+        Wait.Until(driver => driver.FindElements(By.CssSelector("[role='status']")).Any(element =>
+            element.Displayed && element.Text.Contains("aangemaakt", StringComparison.OrdinalIgnoreCase)));
 
         var saved = ReadTreatments(patient.Id);
         Assert.IsNotEmpty(saved, "The referral returned to the patient list but stored no treatment rows.");
@@ -227,61 +217,42 @@ public abstract class ReferralTreatmentBrowserTest
 
     protected void CheckPatientBooking(SavedTreatment bookedTreatment, SavedTreatment otherTreatment)
     {
+        var specialist = _users.CreateUser(RoleType.Specialist, "booking_specialist");
+        var specialistId = AddSpecialist(specialist);
+        Execute("""
+            INSERT INTO dbo.SpecialistSpecialty (SpecialistId, SpecialtyId)
+            SELECT @Specialist, c.SpecialtyId
+            FROM dbo.ReferralTreatment t
+            JOIN dbo.TreatmentCode c ON c.TreatmentCodeId = t.TreatmentCodeId
+            WHERE t.ReferralTreatmentId = @Treatment;
+            """, ("@Specialist", specialistId), ("@Treatment", bookedTreatment.Id));
+
         SignIn(Patient.Account);
-        Browser.Navigate().GoToUrl(new Uri(_baseUri, $"/patient/{Patient.Id}/doorverwijzingen"));
-        var code = Browser.FindElements(By.XPath(
-            $"//*[self::td or self::span or self::p or self::h3][normalize-space()='{bookedTreatment.Code}']")).FirstOrDefault();
+        OpenPortalMenuLink("/patient/doorverwijzingen");
+        var treatmentRow = Wait.Until(driver => driver.FindElements(ReferralTreatmentItem(bookedTreatment.Code))
+            .FirstOrDefault(row => row.Displayed));
+        Assert.IsTrue(Browser.FindElements(ReferralTreatmentItem(otherTreatment.Code)).Any(row => row.Displayed),
+            "The patient must be able to choose between the two referral treatments.");
+        treatmentRow.FindElement(By.XPath(".//button[normalize-space()='Afspraak inplannen']")).Click();
 
-        if (code is null)
-        {
-            Assert.Inconclusive("The patient referral overview and booking flow are unavailable in this application version.");
-        }
-        var row = code!.FindElements(By.XPath("ancestor::*[self::tr or self::li or self::article][1]")).FirstOrDefault();
-        var book = row?.FindElements(By.XPath(
-            ".//*[self::button or self::a][contains(normalize-space(), 'Inplannen') or contains(normalize-space(), 'Afspraak')]"))
-            .FirstOrDefault();
-        if (book is null)
-        {
-            Assert.Inconclusive("The selected referral treatment has no patient booking action in this application version.");
-        }
-        book!.Click();
+        var slot = Wait.Until(driver => driver.FindElements(By.CssSelector("input[type='radio'][name='appointment-slot']"))
+            .FirstOrDefault(input => input.Displayed && input.Enabled));
+        slot.Click();
+        Browser.FindElement(By.XPath("//button[normalize-space()='Afspraak bevestigen']")).Click();
+        Wait.Until(driver => driver.FindElements(By.CssSelector("main [role='status']")).Any(element =>
+            element.Displayed && element.Text.Contains("Je afspraak is ingepland.", StringComparison.Ordinal)));
 
-        IWebElement? slot;
-        try
-        {
-            slot = Wait.Until(driver => driver.FindElements(By.TagName("button")).FirstOrDefault(button =>
-                button.Displayed && button.Enabled && Regex.IsMatch(button.Text.Trim(), @"^\d{1,2}:\d{2}$")));
-        }
-        catch (WebDriverTimeoutException)
-        {
-            Assert.Inconclusive("No available appointment slot was shown for the selected treatment.");
-            return;
-        }
-        slot!.Click();
-        Browser.FindElement(By.XPath("//button[contains(normalize-space(), 'Bevestig')]")).Click();
-
-        Assert.IsTrue(Wait.Until(_ => HasAppointment(bookedTreatment.Id)),
-            "The patient did not get an appointment for the selected treatment.");
-        Assert.IsFalse(HasAppointment(otherTreatment.Id), "The other treatment must remain unbooked.");
+        Assert.AreEqual(1, CountActiveAppointments(bookedTreatment.Id),
+            "The patient must get exactly one appointment for the selected treatment.");
+        Assert.AreEqual(0, CountActiveAppointments(otherTreatment.Id), "The other treatment must remain unbooked.");
+        Wait.Until(driver => driver.FindElements(ReferralTreatmentItem(bookedTreatment.Code)).Count == 0 &&
+            driver.FindElements(ReferralTreatmentItem(otherTreatment.Code)).Any(row => row.Displayed));
     }
 
     protected void CheckSpecialistNote(SavedTreatment treatment, string? note)
     {
         var specialist = _users.CreateUser(RoleType.Specialist, "referral_specialist");
-        var specialistId = (int)Scalar(
-            "INSERT INTO dbo.Specialist (UserId) OUTPUT INSERTED.SpecialistId VALUES (@UserId);",
-            ("@UserId", specialist.UserId));
-
-        SignIn(specialist);
-        Browser.FindElement(By.CssSelector("button[aria-controls='navigation-drawer']")).Click();
-        var appointments = Browser.FindElements(By.XPath(
-            "//*[@id='navigation-drawer']//*[self::a or self::button]" +
-            "[contains(normalize-space(), 'Afspraken') or contains(normalize-space(), 'Agenda')]"))
-            .FirstOrDefault(element => element.Displayed);
-        if (appointments is null)
-        {
-            Assert.Inconclusive("The specialist has no appointments view. Draft and database assertions passed.");
-        }
+        var specialistId = AddSpecialist(specialist);
 
         var startTime = DateTime.Today.AddDays(1).AddHours(10);
         Execute("""
@@ -291,25 +262,44 @@ public abstract class ReferralTreatmentBrowserTest
             """,
             ("@Treatment", treatment.Id), ("@Patient", Patient.Id), ("@Specialist", specialistId),
             ("@Start", startTime), ("@Duration", treatment.DurationMinutes / 15), ("@Creator", _practitioner.UserId));
-        appointments!.Click();
+        SignIn(specialist);
+        OpenPortalMenuLink("/specialist/afspraken");
 
-        var patientLink = Wait.Until(driver => driver.FindElements(By.CssSelector("main a, main button"))
+        var patientLink = Wait.Until(driver => driver.FindElements(By.CssSelector("main button"))
             .FirstOrDefault(element => element.Displayed && element.Text.Contains(Patient.Account.LastName, StringComparison.Ordinal)));
-        patientLink!.Click();
+        patientLink.Click();
+        Wait.Until(_ => patientLink.GetDomAttribute("aria-expanded") == "true");
+        var details = Browser.FindElement(By.Id(patientLink.GetDomAttribute("aria-controls")!));
+        Wait.Until(_ => details.Displayed);
 
-        var displayedNote = Browser.FindElements(By.XPath("//main//*[self::dt or self::label or self::h3]" +
-            "[normalize-space()='Toelichting']/following-sibling::*[1]")).FirstOrDefault();
+        var displayedNote = details.FindElements(By.XPath(".//dt[normalize-space()='Toelichting']/following-sibling::dd[1]"))
+            .SingleOrDefault(element => element.Displayed);
         if (note is null)
         {
-            Assert.IsTrue(displayedNote is null || string.IsNullOrWhiteSpace(displayedNote.Text),
-                "The specialist must see no placeholder for an omitted note.");
+            Assert.IsNull(displayedNote, "The specialist must see no placeholder for an omitted note.");
             return;
         }
 
         Assert.IsNotNull(displayedNote, "The specialist must see the note on this appointment.");
-        Assert.AreEqual(note, displayedNote!.GetDomProperty("textContent"), "The appointment must show the exact note.");
+        Assert.AreEqual(note.ReplaceLineEndings("\n"), displayedNote.GetDomProperty("textContent")?.ReplaceLineEndings("\n"),
+            "The appointment must show the exact note including its line breaks.");
         Assert.IsEmpty(displayedNote.FindElements(By.TagName("script")), "Note markup must remain plain text.");
     }
+
+    private void OpenPortalMenuLink(string path)
+    {
+        Browser.FindElement(By.CssSelector("button[aria-controls='navigation-drawer']")).Click();
+        var link = Wait.Until(driver => driver.FindElements(By.CssSelector($"#navigation-drawer a[href='{path}']"))
+            .FirstOrDefault(element => element.Displayed));
+        link.Click();
+    }
+
+    private static By ReferralTreatmentItem(string code) =>
+        By.XPath($"//main//li[.//span[normalize-space()='{code}']]");
+
+    private int AddSpecialist(TestUserAccount specialist) => (int)Scalar(
+        "INSERT INTO dbo.Specialist (UserId) OUTPUT INSERTED.SpecialistId VALUES (@UserId);",
+        ("@UserId", specialist.UserId));
 
     private IReadOnlyList<TreatmentCode> SeedTreatmentCatalog()
     {
@@ -350,9 +340,10 @@ public abstract class ReferralTreatmentBrowserTest
         return saved;
     }
 
-    private bool HasAppointment(int treatmentId) => (int)Scalar("""
-        SELECT COUNT(*) FROM dbo.Appointment WHERE ReferralTreatmentId = @TreatmentId AND CancelledAt IS NULL;
-        """, ("@TreatmentId", treatmentId)) > 0;
+    private int CountActiveAppointments(int treatmentId) => (int)Scalar("""
+        SELECT COUNT(*) FROM dbo.Appointment
+        WHERE ReferralTreatmentId = @TreatmentId AND PatientId = @PatientId AND CancelledAt IS NULL;
+        """, ("@TreatmentId", treatmentId), ("@PatientId", Patient.Id));
 
     private void SignIn(TestUserAccount account)
     {
