@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- Algemeen -->
+  <data name="Greeting" xml:space="preserve">
+    <value>Beste {0},</value>
+  </data>
+  <data name="ButtonFallback" xml:space="preserve">
+    <value>Werkt de knop niet? Kopieer dan deze link in uw browser:</value>
+  </data>
+
+  <!-- Account activeren -->
+  <data name="Activation_Subject_Patient" xml:space="preserve">
+    <value>Uitnodiging voor het patiëntenportaal</value>
+  </data>
+  <data name="Activation_Subject_Staff" xml:space="preserve">
+    <value>Activeer uw account</value>
+  </data>
+  <data name="Activation_Title" xml:space="preserve">
+    <value>Account activeren</value>
+  </data>
+  <data name="Activation_Intro_Patient" xml:space="preserve">
+    <value>Uw huisarts heeft een account voor u aangemaakt in het patiëntenportaal. Klik op de knop hieronder om uw account te activeren en een wachtwoord in te stellen.</value>
+  </data>
+  <data name="Activation_Intro_Staff" xml:space="preserve">
+    <value>Er is een account voor u aangemaakt. Klik op de knop hieronder om uw account te activeren en een wachtwoord in te stellen.</value>
+  </data>
+  <data name="Activation_Footer" xml:space="preserve">
+    <value>Heeft u deze uitnodiging niet verwacht? Dan kunt u deze e-mail negeren.</value>
+  </data>
+
+  <!-- Wachtwoord wijzigen -->
+  <data name="PasswordReset_Subject" xml:space="preserve">
+    <value>Wachtwoord wijzigen</value>
+  </data>
+  <data name="PasswordReset_Title" xml:space="preserve">
+    <value>Wachtwoord wijzigen</value>
+  </data>
+  <data name="PasswordReset_Intro" xml:space="preserve">
+    <value>Er is een verzoek gedaan om uw wachtwoord te wijzigen. Klik op de knop hieronder om een nieuw wachtwoord in te stellen.</value>
+  </data>
+  <data name="PasswordReset_Button" xml:space="preserve">
+    <value>Wachtwoord wijzigen</value>
+  </data>
+  <data name="PasswordReset_Footer" xml:space="preserve">
+    <value>Heeft u dit niet aangevraagd? Dan kunt u deze e-mail negeren, uw wachtwoord blijft ongewijzigd.</value>
+  </data>
+
+  <!-- Doorverwijzing -->
+  <data name="Referral_Subject" xml:space="preserve">
+    <value>Uw huisarts heeft een doorverwijzing voor u klaargezet</value>
+  </data>
+  <data name="Referral_Title" xml:space="preserve">
+    <value>Doorverwijzing beschikbaar</value>
+  </data>
+  <data name="Referral_Intro_Single" xml:space="preserve">
+    <value>Uw huisarts heeft een doorverwijzing voor een afspraak open gezet. Gebruik het patiëntenportaal om hiervoor een afspraak te maken.</value>
+  </data>
+  <data name="Referral_Intro_Multiple" xml:space="preserve">
+    <value>Uw huisarts heeft {0} doorverwijzingen voor afspraken open gezet. Gebruik het patiëntenportaal om hiervoor afspraken te maken.</value>
+  </data>
+  <data name="Referral_Count" xml:space="preserve">
+    <value>Aantal doorverwijzingen: {0}</value>
+  </data>
+  <data name="Referral_Button" xml:space="preserve">
+    <value>Naar het patiëntenportaal</value>
+  </data>
+  <data name="Referral_Footer" xml:space="preserve">
+    <value>Verwachtte u deze e-mail niet? Neem dan contact op met uw huisarts.</value>
+  </data>
+</root>

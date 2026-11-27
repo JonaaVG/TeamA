@@ -3,10 +3,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using ExcelDataReader;
 using ExcelDataReader.Exceptions;
-using GentleHealersApi.DTOs;
-using GentleHealersApi.Services.Interfaces;
+using GentleHealersApi.DTOs.TreatmentCode;
+using GentleHealersApi.Services.Interfaces.TreatmentCode;
 
-namespace GentleHealersApi.Services;
+namespace GentleHealersApi.Services.TreatmentCode;
 
 public sealed class TreatmentCodeFileReader : ITreatmentCodeReader
 {

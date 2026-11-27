@@ -1,4 +1,4 @@
-namespace GentleHealersApi.DTOs;
+namespace GentleHealersApi.DTOs.TreatmentCode;
 
 public sealed record TreatmentCodeDto(
     int TreatmentCodeId,

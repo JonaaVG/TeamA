@@ -1,0 +1,44 @@
+{
+  "search": {
+    "title": "Patiënt zoeken",
+    "placeholder": "Zoek op naam of BSN...",
+    "searchLabel": "Zoek patiënt",
+    "button": "Zoeken",
+    "buttonLoading": "Bezig met zoeken...",
+    "noResults": "Geen patiënten gevonden.",
+    "resultsCountOne": "1 patiënt gevonden.",
+    "resultsCountMany": "{count} patiënten gevonden.",
+    "bsn": "BSN:",
+    "dateOfBirth": "Geboortedatum:",
+    "actionAriaLabel": "{action} voor {name}, BSN {bsn}",
+    "errors": {
+      "generic": "Er is een fout opgetreden bij het zoeken."
+    }
+  },
+  "referral": {
+    "title": "Doorverwijzing aanmaken",
+    "addCodePlaceholder": "Behandelcode toevoegen",
+    "addCodeLabel": "Behandelcode selecteren",
+    "addCodeButtonLabel": "Behandelcode toevoegen",
+    "removeCodeLabel": "Verwijder {code}",
+    "durationLabel": "Duur afspraak:",
+    "durationUnit": "{minutes} min",
+    "notesLabel": "Toelichting voor specialist (optioneel)",
+    "cancelButton": "Annuleren",
+    "submitButton": "Aanmaken",
+    "submitButtonLoading": "Bezig...",
+    "success": "Doorverwijzing(en) succesvol aangemaakt en email is verstuurd",
+    "successEmailFailed": "Doorverwijzing(en) aangemaakt, maar de e-mail kon niet worden verzonden",
+    "errors": {
+      "noTreatmentCodes": "Voeg minimaal één behandelcode toe.",
+      "generic": "Kon de doorverwijzing niet aanmaken."
+    },
+    "specialtyFilterLabel": "Filter op specialisme",
+    "allSpecialties": "Alle specialismen"
+  },
+  "actions": {
+    "dossier": "Dossier",
+    "add": "Toevoegen",
+    "refer": "Doorverwijzen"
+  }
+}

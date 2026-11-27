@@ -38,4 +38,3 @@ appsettings.Testing.json
 # Visual Studio lokale bestanden
 .vs/
 *.csproj.user
-/GentleHealersApi

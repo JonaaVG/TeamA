@@ -1,9 +1,10 @@
 using System.Data;
-using GentleHealersApi.DTOs;
+using GentleHealersApi.DTOs.TreatmentCode;
+using GentleHealersApi.Services.Interfaces.TreatmentCode;
 using GentleHealersApi.Services.Interfaces;
 using Microsoft.Data.SqlClient;
 
-namespace GentleHealersApi.Services;
+namespace GentleHealersApi.Services.TreatmentCode;
 
 public sealed class TreatmentCodeRepository(ISqlConnectionFactory connectionFactory) : ITreatmentCodeRepository
 {

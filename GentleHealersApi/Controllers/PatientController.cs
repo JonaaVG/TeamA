@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using GentleHealersApi.Services.Interfaces;
+using GentleHealersApi.Services.Interfaces.Patient;
 using Microsoft.AspNetCore.Authorization;
 using GentleHealersApi.DTOs;
 using GentleHealersApi.DTOs.Patient;
@@ -36,6 +37,7 @@ namespace GentleHealersApi.Controllers
         /// Creates a user account and a patient record in one go.
         /// If the patient record cannot be created, the user is not kept.
         /// </summary>
+        [Authorize(Roles = "GeneralPractitioner")]
         [HttpPost("register")]
         [ProducesResponseType(typeof(PatientCreatedDto), StatusCodes.Status201Created)]
         public async Task<ActionResult<PatientCreatedDto>> RegisterPatient(
@@ -83,6 +85,7 @@ namespace GentleHealersApi.Controllers
         /// <summary>
         /// Adds a patient record for an existing user.
         /// </summary>
+        [Authorize(Roles = "GeneralPractitioner")]
         [HttpPost]
         [ProducesResponseType(typeof(PatientCreatedDto), StatusCodes.Status201Created)]
         public async Task<ActionResult<PatientCreatedDto>> AddPatient(
@@ -109,6 +112,34 @@ namespace GentleHealersApi.Controllers
             catch (InvalidOperationException ex)
             {
                 return Conflict(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return StatusCode(403, new { message = ex.Message });
+            }
+        }
+
+
+        /// <summary>
+        /// Searches patients by BSN (digits only) or by first/last name.
+        /// </summary>
+        [Authorize(Roles = "GeneralPractitioner,Nurse,Specialist")]
+        [HttpGet("search")]
+        [ProducesResponseType(typeof(IEnumerable<PatientSearchResultDto>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<IEnumerable<PatientSearchResultDto>>> Search(
+            [FromQuery] string? query)
+        {
+            try
+            {
+                int userId = User.GetUserIdFromClaims();
+
+                var results = await _patientService.SearchPatientsAsync(query, userId);
+
+                return Ok(results);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
