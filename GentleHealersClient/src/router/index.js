@@ -79,13 +79,21 @@ const routes = [
       roles: ['SystemAdministrator'],
     }
   },
-
   {
-  path: '/access-denied',
-  name: 'accessDenied',
-  component: () => import('../views/AccessDeniedPage.vue'),
-  meta: { auth: true },
-}
+    path: '/access-denied',
+    name: 'accessDenied',
+    component: () => import('../views/AccessDeniedPage.vue'),
+    meta: { auth: true },
+  },
+  {
+    path: '/activeer',
+    name: 'setuppassword',
+    component: () => import('../views/Patient/SetUpPasswordPage.vue'),
+    meta: {
+      auth: false
+    }
+  },
+  
 ]
 
 const router = createRouter({

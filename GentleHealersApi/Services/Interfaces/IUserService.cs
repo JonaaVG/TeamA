@@ -15,6 +15,11 @@ namespace GentleHealersApi.Services.Interfaces
 
         Task<UserCreatedDto> CreateUserAsync(
             CreateUserDto dto, SqlConnection connection, SqlTransaction transaction);
+
         Task DeleteUserAsync(int userId, int practitionerUserId);
+
+        Task<bool> ValidateActivationTokenAsync(string email, string token);
+
+        Task<bool> SetPasswordAsync(SetPasswordDto dto);
     }
 }

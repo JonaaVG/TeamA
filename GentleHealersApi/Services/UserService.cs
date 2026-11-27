@@ -1,6 +1,7 @@
 using GentleHealersApi.DTOs.User;
 using GentleHealersApi.Extensions;
 using GentleHealersApi.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Data.SqlClient;
 
 namespace GentleHealersApi.Services
@@ -18,7 +19,7 @@ namespace GentleHealersApi.Services
 
         public async Task<UserCreatedDto> CreateUserAsync(CreateUserDto dto, int practitionerUserId)
         {
-            using var connection = await _connectionFactory.GetAuthenticatedConnectionAsync(practitionerUserId);
+            using var connection = await _connectionFactory.GetConnectionAsync(practitionerUserId);
             using var transaction = connection.BeginTransaction();
             try
             {
@@ -101,7 +102,7 @@ namespace GentleHealersApi.Services
 
         public async Task DeleteUserAsync(int userId, int practitionerUserId)
         {
-            using var connection = await _connectionFactory.GetAuthenticatedConnectionAsync(practitionerUserId);
+            using var connection = await _connectionFactory.GetConnectionAsync(practitionerUserId);
             using var transaction = connection.BeginTransaction();
             try
             {
@@ -126,6 +127,118 @@ namespace GentleHealersApi.Services
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        public async Task<bool> ValidateActivationTokenAsync(string email, string token)
+        {
+            using var connection = await _connectionFactory.GetConnectionAsync();
+            var query = @"
+                SELECT ut.TokenHash
+                FROM dbo.UserToken ut
+                JOIN dbo.AppUser au ON ut.UserId = au.UserId
+                WHERE au.Email = @Email
+                  AND au.Status = 'Invited'
+                  AND ut.Type = 'Activation'
+                  AND ut.ExpiresAt > SYSUTCDATETIME()
+                  AND ut.UsedAt IS NULL";
+
+            using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Email", email.Trim().ToLowerInvariant());
+
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                var storedHash = reader.GetString(0);
+                if (TokenHelper.VerifyToken(token, storedHash))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public async Task<bool> SetPasswordAsync(SetPasswordDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Password) || !IsPasswordValid(dto.Password))
+                return false;
+
+            using var connection = await _connectionFactory.GetConnectionAsync();
+            var query = @"
+                SELECT ut.UserTokenId, ut.TokenHash, au.UserId
+                FROM dbo.UserToken ut
+                INNER JOIN dbo.AppUser au ON ut.UserId = au.UserId
+                WHERE au.Email = @Email
+                AND au.Status = 'Invited'
+                AND ut.Type = 'Activation'
+                AND ut.ExpiresAt > SYSUTCDATETIME()
+                AND ut.UsedAt IS NULL";
+
+            using var command = new SqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Email", dto.Email.Trim().ToLowerInvariant());
+
+            int userId;
+            int tokenId;
+
+            using (var reader = await command.ExecuteReaderAsync())
+            {
+                if (!await reader.ReadAsync())
+                    return false;
+
+                tokenId = reader.GetInt32(0);
+                var storedHash = reader.GetString(1);
+                userId = reader.GetInt32(2);
+
+                if (!TokenHelper.VerifyToken(dto.Token, storedHash))
+                    return false;
+            }
+
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password); 
+
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                var updateUser = @"
+                    UPDATE dbo.AppUser
+                    SET PasswordHash = @PasswordHash, Status = 'Active'
+                    WHERE UserId = @UserId";
+
+                using (var userCommand = new SqlCommand(updateUser, connection, transaction))
+                {
+                    userCommand.Parameters.AddWithValue("@PasswordHash", passwordHash);
+                    userCommand.Parameters.AddWithValue("@UserId", userId);
+                    await userCommand.ExecuteNonQueryAsync();
+                }
+
+                var updateToken = @"
+                    UPDATE dbo.UserToken
+                    SET UsedAt = SYSUTCDATETIME()
+                    WHERE UserTokenId = @TokenId";
+
+                using (var tokenCommand = new SqlCommand(updateToken, connection, transaction))
+                {
+                    tokenCommand.Parameters.AddWithValue("@TokenId", tokenId);
+                    await tokenCommand.ExecuteNonQueryAsync();
+                }
+
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        private static bool IsPasswordValid(string password)
+        {
+            return password.Length >= 12
+                && password.Any(char.IsDigit)
+                && password.Any(char.IsUpper)
+                && password.Any(char.IsLower)
+                && password.Any(character => !char.IsLetterOrDigit(character));
         }
     }
 }

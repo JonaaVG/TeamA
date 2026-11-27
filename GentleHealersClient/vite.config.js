@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       vue(),
-      vueDevTools(),
+      // vueDevTools(),
       tailwindcss(),
     ],
     resolve: {
@@ -32,6 +32,11 @@ export default defineConfig(({ mode }) => {
           secure: false,
         },
       },
+    },
+    test: {
+      environment: 'jsdom',
+      clearMocks: true,
+      restoreMocks: true,
     },
   }
 })

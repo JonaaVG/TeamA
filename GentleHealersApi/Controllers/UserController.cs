@@ -3,22 +3,26 @@ using GentleHealersApi.Services.Interfaces;
 using GentleHealersApi.DTOs.User;
 using Microsoft.AspNetCore.Authorization;
 using GentleHealersApi.Extensions;
+using GentleHealersApi.Services.Email;
+using GentleHealersApi.Services;
 using GentleHealersApi.DTOs;
 using GentleHealersApi.Exceptions;
 
 
+
 namespace GentleHealersApi.Controllers
 {
-
     [ApiController]
     [Route("api/users")]
-    [Authorize(Roles = "GeneralPractitioner, SystemAdministrator")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
         private readonly IEmailService _emailService;
         private readonly ILogger<UserController> _logger;
-        public UserController(IUserService userService, IEmailService emailService, ILogger<UserController> logger)
+        public UserController(
+            IUserService userService,
+            IEmailService emailService,
+            ILogger<UserController> logger)
         {
             _userService = userService;
             _emailService = emailService;
@@ -29,6 +33,7 @@ namespace GentleHealersApi.Controllers
         /// </summary>
         /// <param name="dto">The data transfer object for creating a new user.</param>
         /// <returns>The created user information.</returns>
+        [Authorize(Roles = "GeneralPractitioner, SystemAdministrator")]
         [HttpPost("create")]
         [ProducesResponseType(typeof(UserCreatedDto), StatusCodes.Status201Created)]
         public async Task<ActionResult<UserCreatedDto>> CreateUser([FromBody] CreateUserDto dto)
@@ -65,6 +70,34 @@ namespace GentleHealersApi.Controllers
             {
                 return Conflict(new { message = ex.Message });
             }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("validate-activation-token")]
+        public async Task<ActionResult<bool>> ValidateActivationToken(ValidateTokenDto dto)
+        {
+            var isValid = await _userService.ValidateActivationTokenAsync(dto.Email, dto.Token);
+
+            if (!isValid)
+            {
+                return BadRequest("Activatielink is ongeldig of verlopen.");
+            }
+
+            return Ok(isValid);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("set-password")]
+        public async Task<IActionResult> SetPassword([FromBody] SetPasswordDto dto)
+        {
+            var result = await _userService.SetPasswordAsync(dto);
+
+            if (!result)
+            {
+                return BadRequest("Het instellen van het wachtwoord is mislukt. Controleer de activatielink en probeer het opnieuw.");
+            }
+
+            return Ok(new { message = "Wachtwoord succesvol ingesteld." });
         }
     }
 }
