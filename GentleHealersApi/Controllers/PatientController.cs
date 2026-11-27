@@ -123,7 +123,7 @@ namespace GentleHealersApi.Controllers
         /// <summary>
         /// Searches patients by BSN (digits only) or by first/last name.
         /// </summary>
-        [Authorize(Roles = "GeneralPractitioner,Nurse,Specialist")]
+        [Authorize(Roles = "GeneralPractitioner,Nurse,Specialist,AdministrativeStaff")]
         [HttpGet("search")]
         [ProducesResponseType(typeof(IEnumerable<PatientSearchResultDto>), StatusCodes.Status200OK)]
         public async Task<ActionResult<IEnumerable<PatientSearchResultDto>>> Search(
