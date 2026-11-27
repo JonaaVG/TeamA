@@ -23,16 +23,3 @@
 
 `PatientControllerSearchTests` separately covers the search endpoint response for matching patients, no matches, invalid queries, and forbidden access.
 
-## Latest verification
-
-The test data is retained between runs. The page object identifies a patient using its generated unique BSN, while the tests still verify name and date of birth. The API filters GP searches and referral creation to the authenticated GP's practice, so records from other practices cannot contaminate later runs or be used for a referral.
-
-Both API and test projects compile successfully. Restart the API before rerunning Selenium so it loads the practice-scope checks. The updated end-to-end result still needs confirmation.
-
-Earlier Selenium attempts in this environment did not complete consistently: one was blocked by a running API file lock and Chrome startup failures. The latest user-provided run reached assertions and exposed duplicate name/date matches plus missing practice checks; the changes above address those failures. Selenium has not been rerun after these changes because each run adds persistent test data.
-
-To rerun when ChromeDriver can start and the test environment is available:
-
-```powershell
-dotnet test GentleHealersApi.Tests\GentleHealersApi.Tests.csproj --filter "FullyQualifiedName~US_4_1_PatientReferralSeleniumTests|FullyQualifiedName~US_4_1_PracticeScopeSeleniumTests"
-```
