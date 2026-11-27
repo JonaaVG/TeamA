@@ -11,7 +11,7 @@ namespace GentleHealersApi.Controllers
     /// <summary>
     /// Controller for managing referrals for patients. Provides endpoints to create referrals for existing patients.
     /// </summary>
-    [Authorize(Roles = "GeneralPractitioner")]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class ReferralController : ControllerBase
@@ -32,6 +32,11 @@ namespace GentleHealersApi.Controllers
             _portalUrl = configuration["AppSettings:PortalBaseUrl"]
                 ?? throw new InvalidOperationException("AppSettings:PortalBaseUrl ontbreekt in de configuratie.");
         }
+        //////////////////////////////////////////////////////
+        ///                                                ///
+        ///         Referral Creation Endpoint             ///
+        ///                                                ///
+        //////////////////////////////////////////////////////
 
         /// <summary>
         /// Creates referrals for a specific patient. The authenticated user must be a General Practitioner to access this endpoint. The request body should contain the referral details.
@@ -89,6 +94,37 @@ namespace GentleHealersApi.Controllers
                 _logger.LogError(ex, "Doorverwijsmail naar patiënt {PatientId} kon niet worden verzonden.", patientId);
                 return false;
             }
+        }
+
+        //////////////////////////////////////////////////////
+        ///                                                ///
+        ///         Referral View Endpoint                 ///
+        ///                                                ///
+        //////////////////////////////////////////////////////
+
+        /// <summary>
+        /// Gets the open referral treatments of the authenticated patient.
+        /// </summary>
+        /// <returns>A list of referral treatments that can still be scheduled.</returns>
+        /// <summary>
+        /// Gets the open referral treatments of a patient. A patient can only view their own referrals; administrative staff can view those of any patient.
+        /// </summary>
+        /// <param name="patientId">The ID of the patient.</param>
+        /// <returns>A list of referral treatments that can still be scheduled.</returns>
+        [Authorize(Roles = "Patient,AdministrativeStaff")]
+        [HttpGet("patient/{patientId}/referrals")]
+        [ProducesResponseType(typeof(List<ReferralOverviewDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetPatientReferrals([FromRoute] int patientId)
+        {
+            try
+            {
+                var userId = User.GetUserIdFromClaims();
+                var isStaff = User.IsInRole("AdministrativeStaff");
+
+                var result = await _referralService.GetOpenReferralsAsync(patientId, userId, isStaff);
+                return Ok(result);
+            }
+            catch (UnauthorizedAccessException) { return Forbid(); }
         }
 
     }

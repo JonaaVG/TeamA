@@ -28,7 +28,7 @@
           <div class="nav-submenu">
             <RouterLink
               v-for="item in section.items"
-              :key="item.to"
+              :key="item.label"
               class="nav-menu-link"
               :to="item.to"
               @click="close"
@@ -109,7 +109,7 @@ const profileName = computed(() => {
   // the API includes name claims or provides a current-user endpoint.
   return fullName || claims.value?.email || 'Gebruiker'
 })
-
+const patientId = computed(() => claims.value?.nameid)
 const roleMenuSections = computed(() => {
   const menus = {
     SystemAdministrator: [
@@ -141,6 +141,17 @@ const roleMenuSections = computed(() => {
       {
         label: 'Patiënten',
         items: [{ label: 'Patiënt zoeken', to: '/patient/zoeken' }],
+      },
+    ],
+    Patient: [
+      {
+        label: 'Doorverwijzingen',
+        items: [
+          {
+            label: 'Mijn doorverwijzingen',
+            to: { name: 'referral-overview', params: { patientId: patientId.value } },
+          },
+        ],
       },
     ]
   }

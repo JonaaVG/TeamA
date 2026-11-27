@@ -71,6 +71,15 @@ const routes = [
     }
   },
   {
+    path: '/patient/:patientId/doorverwijzingen',
+    name: 'referral-overview',
+    component: () => import('../views/Patient/PatientReferralOverview.vue'),
+    meta: {
+      auth: true,
+      roles: ['Patient','AdministrativeStaff']
+    }
+  },
+  {
     path: '/rol/management',
     name: 'rolManagement',
     component: () => import('../views/Systemadministrator/RolemanagementPage.vue'),

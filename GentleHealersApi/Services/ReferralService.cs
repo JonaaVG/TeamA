@@ -23,7 +23,7 @@ namespace GentleHealersApi.Services
         /// <returns>A list of the created referral treatment IDs.</returns>
         /// <exception cref="ArgumentException"></exception>
         public async Task<CreateReferralsResult> CreateReferralsAsync(
-    int patientId, IReadOnlyList<CreateReferralItemDto> items, int practitionerUserId)
+            int patientId, IReadOnlyList<CreateReferralItemDto> items, int practitionerUserId)
         {
             // Validation checks
             if (items.Count == 0)
@@ -110,6 +110,68 @@ namespace GentleHealersApi.Services
                 transaction.Rollback();
                 throw;
             }
+        }
+
+        /// <summary>
+        /// Gets the open referral treatments of a patient that have not expired yet.
+        /// </summary>
+        /// <param name="userId">The user ID of the authenticated patient.</param>
+        /// <returns>A list of referral treatments that can still be scheduled.</returns>
+        public async Task<List<ReferralOverviewDto>> GetOpenReferralsAsync(int patientId, int userId, bool isStaff)
+        {
+            using var connection = await _connectionFactory.GetAuthenticatedConnectionAsync(userId);
+
+            // A patient may only view their own referrals
+            if (!isStaff)
+            {
+                using var check = new SqlCommand(@"
+            SELECT COUNT(1)
+            FROM dbo.Patient
+            WHERE PatientId = @PatientId AND UserId = @UserId", connection);
+                check.Parameters.AddWithValue("@PatientId", patientId);
+                check.Parameters.AddWithValue("@UserId", userId);
+
+                if ((int)(await check.ExecuteScalarAsync())! == 0)
+                    throw new UnauthorizedAccessException("Deze patiënt is niet van u.");
+            }
+
+            using var cmd = new SqlCommand(@"
+        SELECT
+            rt.ReferralTreatmentId,
+            r.CreatedAt,
+            s.Name                              AS Department,
+            tc.Description                      AS TreatmentDescription,
+            gpu.FirstName + ' ' + gpu.LastName  AS GeneralPractitionerName,
+            r.ExpiresAt
+        FROM dbo.Referral r
+        JOIN dbo.ReferralTreatment rt   ON rt.ReferralId = r.ReferralId
+        JOIN dbo.TreatmentCode tc       ON tc.TreatmentCodeId = rt.TreatmentCodeId
+        JOIN dbo.Specialty s            ON s.SpecialtyId = tc.SpecialtyId
+        JOIN dbo.GeneralPractitioner gp ON gp.GeneralPractitionerId = r.GeneralPractitionerId
+        JOIN dbo.AppUser gpu            ON gpu.UserId = gp.UserId
+        WHERE r.PatientId = @PatientId
+          AND rt.Status = 'Open'
+          AND r.ExpiresAt > SYSUTCDATETIME()
+        ORDER BY r.ExpiresAt, rt.ReferralTreatmentId", connection);
+
+            cmd.Parameters.AddWithValue("@PatientId", patientId);
+
+            var referrals = new List<ReferralOverviewDto>();
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                referrals.Add(new ReferralOverviewDto
+                {
+                    ReferralTreatmentId = reader.GetInt32(0),
+                    CreatedAt = reader.GetDateTime(1),
+                    Department = reader.GetString(2),
+                    TreatmentDescription = reader.GetString(3),
+                    GeneralPractitionerName = reader.GetString(4),
+                    ExpiresAt = reader.GetDateTime(5)
+                });
+            }
+
+            return referrals;
         }
     }
 }

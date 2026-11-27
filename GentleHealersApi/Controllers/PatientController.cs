@@ -11,7 +11,7 @@ namespace GentleHealersApi.Controllers
     /// <summary>
     /// Controller for managing patients.
     /// </summary>
-    [Authorize(Roles = "GeneralPractitioner")]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class PatientController : ControllerBase

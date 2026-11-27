@@ -37,6 +37,22 @@
   "actions": {
     "dossier": "Dossier",
     "add": "Toevoegen",
-    "refer": "Doorverwijzen"
+    "refer": "Doorverwijzen",
+    "referralOverview": "Doorverwijzingen"
+  },
+  "referrals": {
+    "title": "Doorverwijzingen",
+    "subtitle": "De huisarts heeft naar onze zorginstelling doorverwezen.",
+    "createdAt": "Datum doorverwijzing",
+    "department": "Afdeling",
+    "treatment": "Behandeling",
+    "referredBy": "Verwezen door",
+    "expiresAt": "Verloopt op",
+    "action": "Actie",
+    "plan": "Inplannen",
+    "loading": "Laden...",
+    "error": "Doorverwijzingen konden niet worden opgehaald.",
+    "forbidden": "U heeft geen toegang tot deze doorverwijzingen.",
+    "empty": "Er zijn geen openstaande doorverwijzingen."
   }
 }
