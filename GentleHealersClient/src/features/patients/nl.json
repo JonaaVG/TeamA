@@ -1,16 +1,18 @@
 {
   "search": {
     "title": "Patiënt zoeken",
-    "placeholder": "Naam of BSN",
-    "searchLabel": "Zoek patiënt op naam of BSN",
+    "placeholder": "Zoek op naam of BSN...",
+    "searchLabel": "Zoek patiënt",
     "button": "Zoeken",
-    "buttonLoading": "Zoeken...",
-    "bsn": "BSN",
-    "dateOfBirth": "Geboortedatum",
+    "buttonLoading": "Bezig met zoeken...",
     "noResults": "Geen patiënten gevonden.",
+    "resultsCountOne": "1 patiënt gevonden.",
+    "resultsCountMany": "{count} patiënten gevonden.",
+    "bsn": "BSN:",
+    "dateOfBirth": "Geboortedatum:",
+    "actionAriaLabel": "{action} voor {name}, BSN {bsn}",
     "errors": {
-      "emptyQuery": "Vul een naam of BSN in.",
-      "generic": "Er is iets misgegaan bij het zoeken naar patiënten."
+      "generic": "Er is een fout opgetreden bij het zoeken."
     }
   },
   "referral": {
