@@ -26,7 +26,7 @@ public sealed class US_4_1_PatientReferralSeleniumTests : TestBase
         _loginPage = new LoginPage(_driver);
     }
 
-    [TestMethod]
+        [TestMethod]
     [TestCategory("TC-1.1.1-01")]
     public void HuisartsKanPatientViaZoekbalkVindenEnDoorverwijzen()
     {
