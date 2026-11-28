@@ -52,7 +52,36 @@ const routes = [
       roles: ['GeneralPractitioner']
     }
   },
-
+  {
+    path: '/patient/zoeken',
+    name: 'searchpatient',
+    component: () => import('../views/Patient/PatientSearchPage.vue'),
+    meta: {
+      auth: true,
+      roles: ['GeneralPractitioner', 'Nurse', 'Specialist', 'AdministrativeStaff']
+    }
+  },
+  {
+    path: '/patient/:patientId/doorverwijzen',
+    name: 'patient-referral',
+    component: () => import('../views/Patient/PatientReferralPage.vue'),
+    meta: {
+      auth: true,
+      roles: ['GeneralPractitioner']
+    }
+  },
+  {
+    path: '/patient/doorverwijzingen',
+    name: 'patient-referral-booking',
+    component: () => import('../views/Patient/PatientReferralBookingPage.vue'),
+    meta: { auth: true, roles: ['Patient'] },
+  },
+  {
+    path: '/specialist/afspraken',
+    name: 'specialist-appointments',
+    component: () => import('../views/Specialist/SpecialistAppointmentsPage.vue'),
+    meta: { auth: true, roles: ['Specialist'] },
+  },
   {
     path: '/rol/management',
     name: 'rolManagement',

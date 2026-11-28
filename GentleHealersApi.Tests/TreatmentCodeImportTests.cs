@@ -4,8 +4,11 @@ using System.Text;
 using System.Xml.Linq;
 using GentleHealersApi.Controllers;
 using GentleHealersApi.DTOs;
+using GentleHealersApi.DTOs.TreatmentCode;
 using GentleHealersApi.Services;
 using GentleHealersApi.Services.Interfaces;
+using GentleHealersApi.Services.Interfaces.TreatmentCode;
+using GentleHealersApi.Services.TreatmentCode;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -251,7 +254,10 @@ public sealed class TreatmentCodeImportTests
 
     private static TreatmentCodesController CreateController(ITreatmentCodeImportService service, ITreatmentCodeRepository? repository = null)
     {
-        var controller = new TreatmentCodesController(service, repository ?? new RecordingRepository())
+        var controller = new TreatmentCodesController(
+            service,
+            repository ?? new RecordingRepository(),
+            new StubTreatmentCodeService())
         {
             ControllerContext = new ControllerContext
             {
@@ -294,6 +300,12 @@ public sealed class TreatmentCodeImportTests
             ReadByUserId = userId;
             return Task.FromResult<IReadOnlyList<TreatmentCodeDto>>([]);
         }
+    }
+
+    private sealed class StubTreatmentCodeService : ITreatmentCodeService
+    {
+        public Task<IEnumerable<GetTreatmentCodeDto>> GetActiveTreatmentCodesAsync(int userId)
+            => Task.FromResult<IEnumerable<GetTreatmentCodeDto>>([]);
     }
 
     private sealed class StubReader(IReadOnlyList<TreatmentCodeImportRow> rows) : ITreatmentCodeReader

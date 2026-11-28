@@ -4,6 +4,10 @@ using Microsoft.IdentityModel.Tokens;
 using GentleHealersApi.Services.Email;
 using GentleHealersApi.Services;
 using GentleHealersApi.Services.Interfaces;
+using GentleHealersApi.Services.TreatmentCode;
+using GentleHealersApi.Services.Interfaces.TreatmentCode;
+using GentleHealersApi.Services.Interfaces.Patient;
+using GentleHealersApi.Services.Patient;
 using GentleHealersApi.DTOs;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -54,7 +58,10 @@ builder.Services.AddSingleton<ISqlConnectionFactory, SqlConnectionFactory>();
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPatientRegistrationService, PatientRegistrationService>();
-
+builder.Services.AddScoped<ISpecialtyService, SpecialtyService>();
+builder.Services.AddScoped<ITreatmentCodeService, TreatmentCodeService>();
+builder.Services.AddScoped<IReferralService, ReferralService>();
+builder.Services.AddScoped<ReferralBookingService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IRoleService, RoleService>();

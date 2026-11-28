@@ -1,7 +1,7 @@
 using GentleHealersApi.DTOs.Patient;
 using GentleHealersApi.DTOs.User;
 
-namespace GentleHealersApi.Services.Interfaces
+namespace GentleHealersApi.Services.Interfaces.Patient
 {
     public interface IPatientRegistrationService
     {

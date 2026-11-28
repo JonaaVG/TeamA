@@ -1,7 +1,7 @@
-using GentleHealersApi.DTOs;
-using GentleHealersApi.Services.Interfaces;
+using GentleHealersApi.DTOs.TreatmentCode;
+using GentleHealersApi.Services.Interfaces.TreatmentCode;
 
-namespace GentleHealersApi.Services;
+namespace GentleHealersApi.Services.TreatmentCode;
 
 public sealed class TreatmentCodeImportService(ITreatmentCodeReader reader, ITreatmentCodeRepository repository) : ITreatmentCodeImportService
 {

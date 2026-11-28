@@ -13,6 +13,7 @@ namespace GentleHealersApi.Services.Email
             {
                 EmailType.Activation => Activation(r, isPatient),
                 EmailType.PasswordReset => PasswordReset(r),
+                EmailType.Referral => Referral(r),
                 _ => throw new ArgumentOutOfRangeException(nameof(r), $"Onbekend e-mailtype: {r.Type}")
             };
         }
@@ -39,6 +40,17 @@ namespace GentleHealersApi.Services.Email
                 "Er is een verzoek gedaan om uw wachtwoord te wijzigen. Klik op de knop hieronder om een nieuw wachtwoord in te stellen.",
                 "Wachtwoord wijzigen",
                 "Heeft u dit niet aangevraagd? Dan kunt u deze e-mail negeren, uw wachtwoord blijft ongewijzigd.");
+        }
+
+        private static (string, string, string) Referral(EmailRequest r)
+        {
+            var intro = r.ReferralCount > 1
+                ? $"Uw huisarts heeft {r.ReferralCount} behandelingen voor u klaargezet. U kunt hiervoor afspraken maken in het patiëntenportaal."
+                : "Uw huisarts heeft een behandeling voor u klaargezet. U kunt hiervoor een afspraak maken in het patiëntenportaal.";
+
+            return Compose(r, "Uw huisarts heeft een doorverwijzing voor u klaargezet",
+                "Doorverwijzing beschikbaar", intro, "Naar het patiëntenportaal",
+                "Verwachtte u deze e-mail niet? Neem dan contact op met uw huisarts.");
         }
 
         // Gedeelde layout voor alle mails

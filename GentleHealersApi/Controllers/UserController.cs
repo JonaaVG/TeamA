@@ -24,7 +24,11 @@ namespace GentleHealersApi.Controllers
             _emailService = emailService;
             _logger = logger;
         }
-
+        /// <summary>
+        /// Creates a new user account for the authenticated user.
+        /// </summary>
+        /// <param name="dto">The data transfer object for creating a new user.</param>
+        /// <returns>The created user information.</returns>
         [HttpPost("create")]
         [ProducesResponseType(typeof(UserCreatedDto), StatusCodes.Status201Created)]
         public async Task<ActionResult<UserCreatedDto>> CreateUser([FromBody] CreateUserDto dto)

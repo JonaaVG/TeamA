@@ -1,6 +1,6 @@
 using GentleHealersApi.DTOs.Patient;
 using Microsoft.Data.SqlClient;
-namespace GentleHealersApi.Services.Interfaces
+namespace GentleHealersApi.Services.Interfaces.Patient
 {
 
     public interface IPatientService
@@ -16,5 +16,7 @@ namespace GentleHealersApi.Services.Interfaces
         Task<PatientCreatedDto> AddPatientAsync(
             CreatePatientDto dto, int practitionerUserId,
             SqlConnection connection, SqlTransaction transaction);
+
+        Task<IEnumerable<PatientSearchResultDto>> SearchPatientsAsync(string? query, int userId);
     }
 }

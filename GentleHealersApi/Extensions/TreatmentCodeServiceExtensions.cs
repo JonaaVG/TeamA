@@ -1,5 +1,7 @@
-using GentleHealersApi.Services;
+using GentleHealersApi.Services.TreatmentCode;
+using GentleHealersApi.Services.Interfaces.TreatmentCode;
 using GentleHealersApi.Services.Interfaces;
+using GentleHealersApi.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GentleHealersApi.Extensions;
