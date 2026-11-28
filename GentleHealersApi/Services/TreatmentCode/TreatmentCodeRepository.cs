@@ -51,22 +51,34 @@ public sealed class TreatmentCodeRepository(ISqlConnectionFactory connectionFact
             await deactivate.ExecuteNonQueryAsync(cancellationToken);
         }
 
+        await using var locationCommand = new SqlCommand(
+    "SELECT TOP (1) LocationId FROM dbo.Location ORDER BY LocationId;",
+    connection,
+    transaction);
+        var defaultLocationObj = await locationCommand.ExecuteScalarAsync(cancellationToken);
+        if (defaultLocationObj is null or DBNull)
+        {
+            throw new InvalidOperationException("No location found in dbo.Location to assign to new specialties.");
+        }
+        var defaultLocationId = Convert.ToInt32(defaultLocationObj);
+
         foreach (var row in rows)
         {
             await using var insert = new SqlCommand("""
-                DECLARE @SpecialtyId int;
-                SELECT @SpecialtyId = SpecialtyId FROM dbo.Specialty WHERE Name = @Specialty;
-                IF @SpecialtyId IS NULL
-                BEGIN
-                    INSERT INTO dbo.Specialty (Name) VALUES (@Specialty);
-                    SET @SpecialtyId = CONVERT(int, SCOPE_IDENTITY());
-                END;
+        DECLARE @SpecialtyId int;
+        SELECT @SpecialtyId = SpecialtyId FROM dbo.Specialty WHERE Name = @Specialty;
+        IF @SpecialtyId IS NULL
+        BEGIN
+            INSERT INTO dbo.Specialty (Name, LocationId) VALUES (@Specialty, @LocationId);
+            SET @SpecialtyId = CONVERT(int, SCOPE_IDENTITY());
+        END;
 
-                INSERT INTO dbo.TreatmentCode
-                    (CareCode, Description, PreparationNote, SpecialtyId, DurationQuarters, Cost, IsActive, ImportBatchId)
-                VALUES (@CareCode, @Description, @PreparationNote, @SpecialtyId, @DurationQuarters, @Cost, 1, @BatchId);
-                """, connection, transaction);
+        INSERT INTO dbo.TreatmentCode
+            (CareCode, Description, PreparationNote, SpecialtyId, DurationQuarters, Cost, IsActive, ImportBatchId)
+        VALUES (@CareCode, @Description, @PreparationNote, @SpecialtyId, @DurationQuarters, @Cost, 1, @BatchId);
+        """, connection, transaction);
             insert.Parameters.Add("@Specialty", SqlDbType.NVarChar, 100).Value = row.Specialty;
+            insert.Parameters.Add("@LocationId", SqlDbType.Int).Value = defaultLocationId;
             insert.Parameters.Add("@CareCode", SqlDbType.NVarChar, 30).Value = row.CareCode;
             insert.Parameters.Add("@Description", SqlDbType.NVarChar, 255).Value = row.Description;
             insert.Parameters.Add("@PreparationNote", SqlDbType.NVarChar, 500).Value = (object?)row.PreparationNote ?? DBNull.Value;
