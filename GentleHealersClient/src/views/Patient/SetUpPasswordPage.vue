@@ -63,6 +63,11 @@ async function setPassword() {
         return
     }
 
+    if (password.value.length < 12) {
+        errormessage.value = translations.minimumLength
+        return
+    }
+
     try {
     await api.post('/users/set-password', {
         email,
