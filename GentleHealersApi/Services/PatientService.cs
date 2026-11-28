@@ -21,7 +21,7 @@ namespace GentleHealersApi.Services
             if (!IsValidBsn(dto.Bsn))
                 throw new ArgumentException("Het BSN is ongeldig volgens de elfproef.");
             ValidateDateOfBirth(dto.DateOfBirth);
-            using var connection = await _connectionFactory.GetAuthenticatedConnectionAsync(practitionerUserId);
+            using var connection = await _connectionFactory.GetConnectionAsync(practitionerUserId);
             using var transaction = connection.BeginTransaction();
             try
             {

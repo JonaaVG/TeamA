@@ -44,6 +44,14 @@ const routes = [
     }
   },
   {
+    path: '/activeer',
+    name: 'setuppassword',
+    component: () => import('../views/Patient/SetUpPasswordPage.vue'),
+    meta: {
+      auth: false,
+    }
+  },
+  {
     path: '/patient/aanmaken',
     name: 'addpatient',
     component: () => import('../views/Patient/AddPatientPage.vue'),

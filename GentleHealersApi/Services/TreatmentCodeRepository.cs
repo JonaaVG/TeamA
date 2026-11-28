@@ -9,7 +9,7 @@ public sealed class TreatmentCodeRepository(ISqlConnectionFactory connectionFact
 {
     public async Task ImportAsync(IReadOnlyList<TreatmentCodeImportRow> rows, string fileName, int userId, CancellationToken cancellationToken = default)
     {
-        await using var connection = await connectionFactory.GetAuthenticatedConnectionAsync(userId);
+        await using var connection = await connectionFactory.GetConnectionAsync(userId);
         await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
         // Existing DATETIME2 columns use the hospital's local time throughout the schema.
         await using var timestampCommand = new SqlCommand("SELECT dbo.GetLocalTime();", connection, transaction);
@@ -96,7 +96,7 @@ public sealed class TreatmentCodeRepository(ISqlConnectionFactory connectionFact
 
     public async Task<IReadOnlyList<TreatmentCodeDto>> GetActiveAsync(int userId, CancellationToken cancellationToken = default)
     {
-        await using var connection = await connectionFactory.GetAuthenticatedConnectionAsync(userId);
+        await using var connection = await connectionFactory.GetConnectionAsync(userId);
         await using var command = new SqlCommand("""
             SELECT t.TreatmentCodeId, t.CareCode, t.Description, s.Name AS Specialty,
                    t.DurationQuarters, t.Cost, t.PreparationNote
