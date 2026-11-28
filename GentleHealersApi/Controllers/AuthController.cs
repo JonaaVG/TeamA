@@ -34,7 +34,7 @@ namespace GentleHealersApi.Controllers
 
             if (token == null)
             {
-                return Unauthorized(new { success = false, message = "Inloggegevens onjuist. Controleer je E-mailadres en wachtwoord." });
+                return Unauthorized(new { success = false, message = "Inloggegevens onjuist of account is niet actief. Controleer je E-mailadres en wachtwoord." });
             }
 
             return Ok(new { success = true, token });

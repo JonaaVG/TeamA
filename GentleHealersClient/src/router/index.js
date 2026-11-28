@@ -1,9 +1,32 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { canImportTreatmentCodes, getTreatmentCodeClaims } from '@/features/treatmentCodes/access'
 import DashboardPage from '@/views/DashboardPage.vue'
 import {parseJwt} from '@/services/JwtParser.js'
 
 // Define the routes array first
 const routes = [
+  {
+    path: '/beheer/zorgbehandelingen/importeren',
+    name: 'treatment-code-import',
+    component: () => import('../views/TreatmentCodeImportPage.vue'),
+    meta: {
+      auth: true,
+    },
+    beforeEnter: () => {
+      const token = localStorage.getItem('token')
+      if (!getTreatmentCodeClaims(token)) {
+        localStorage.removeItem('token')
+        localStorage.removeItem('userRole')
+        return { name: 'login' }
+      }
+      if (!canImportTreatmentCodes(token)) return { name: 'dashboard' }
+      return true
+    },
+  },
+  {
+    path: '/admin/treatment-codes/import',
+    redirect: { name: 'treatment-code-import' },
+  },
   {
     path: '/',
     name: 'dashboard',
@@ -21,6 +44,14 @@ const routes = [
     }
   },
   {
+    path: '/activeer',
+    name: 'setuppassword',
+    component: () => import('../views/Patient/SetUpPasswordPage.vue'),
+    meta: {
+      auth: false,
+    }
+  },
+  {
     path: '/patient/aanmaken',
     name: 'addpatient',
     component: () => import('../views/Patient/AddPatientPage.vue'),
@@ -29,15 +60,23 @@ const routes = [
       roles: ['GeneralPractitioner']
     }
   },
+
   {
-    path: '/activeer',
-    name: 'setuppassword',
-    component: () => import('../views/Patient/SetUpPasswordPage.vue'),
+    path: '/rol/management',
+    name: 'rolManagement',
+    component: () => import('../views/Systemadministrator/RolemanagementPage.vue'),
     meta: {
-      auth: false
+      auth: true,
+      roles: ['SystemAdministrator'],
     }
   },
-  
+
+  {
+  path: '/access-denied',
+  name: 'accessDenied',
+  component: () => import('../views/AccessDeniedPage.vue'),
+  meta: { auth: true },
+}
 ]
 
 const router = createRouter({
@@ -69,7 +108,7 @@ router.beforeEach((to, from, next) => {
     // Redirect to dashboard if user is already logged in and tries to access login
     next({ name: 'dashboard' })
   } else if (to.meta.roles && !to.meta.roles.includes(userRole)) {
-    next({ name: 'dashboard' })
+    next({ name: 'accessDenied' })
   }else {
     // Allow navigation
     next()

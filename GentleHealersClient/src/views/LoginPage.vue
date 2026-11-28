@@ -70,6 +70,7 @@
           type="submit"
           :disabled="isLoading"
           class="flex h-[3.3rem] w-full items-center justify-center gap-2 rounded-[14px] bg-[#12376b] text-2xl font-semibold text-white transition-colors hover:bg-[#0d2a54] disabled:cursor-not-allowed disabled:opacity-60"
+          name="btn-login"
         >
           Inloggen
           <ArrowRight class="size-6" aria-hidden="true" />
@@ -121,7 +122,7 @@ const handleLogin = async () => {
   } catch (error) {
     errorMessage.value =
       error.response?.data?.message ||
-      'Inloggegevens onjuist. Controleer je E-mailadres en wachtwoord.';
+      'Inloggegevens onjuist of account is niet actief. Controleer je E-mailadres en wachtwoord.';
   } finally {
     isLoading.value = false;
   }

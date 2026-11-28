@@ -40,7 +40,8 @@ namespace GentleHealersApi.Services
                 SELECT u.UserId, r.Name AS Role, u.PasswordHash 
                 FROM dbo.AppUser u 
                 INNER JOIN dbo.Role r ON u.RoleId = r.RoleId 
-                WHERE u.Email = @Email";
+                WHERE u.Email = @Email AND u.Status = N'Active'
+AND u.PasswordHash IS NOT NULL";
 
             using var command = new SqlCommand(sqlQuery, connection);
             command.Parameters.AddWithValue("@Email", email);

@@ -15,6 +15,9 @@ namespace GentleHealersApi.Tests
     /// AC 9.1.1: Enter patient details (elfproef + unique BSN)
     /// AC 9.1.2: Create patient account (account, practice link, invitation)
     ///
+    /// The TestCategory numbers match the test case document (TC 9.1.1 - 01 ... TC 9.1.2 - 07).
+    /// All test data is generated; fixed values are only used for deliberately invalid input.
+    ///
     /// Configuration is loaded primarily from testing.json (via TestConfiguration),
     /// with an optional fallback to environment variables.
     /// </summary>
@@ -77,6 +80,23 @@ namespace GentleHealersApi.Tests
 
         [TestMethod]
         [TestCategory("TC-9.1.1-01")]
+        public void Valid_details_are_accepted_without_validation_errors()
+        {
+            var patient = NewPatient();
+
+            FillForm(patient);
+            SubmitForm();
+
+            WaitForSuccessMessage("Patiëntaccount succesvol aangemaakt!");
+
+            Assert.IsFalse(IsDisplayed("patient-error"),
+                "No validation error should be shown for valid input.");
+
+            _logger.Info("Check passed: valid details were accepted.");
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-02")]
         public void Invalid_BSN_is_rejected_by_elfproef()
         {
             var patient = NewPatient(bsn: "123456789"); // Fails the elfproef check.
@@ -93,7 +113,55 @@ namespace GentleHealersApi.Tests
         }
 
         [TestMethod]
-        [TestCategory("TC-9.1.1-02")]
+        [TestCategory("TC-9.1.1-03")]
+        public void BSN_with_too_few_digits_is_rejected()
+        {
+            var patient = NewPatient(bsn: "11122233"); // 8 digits.
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-04")]
+        public void BSN_with_too_many_digits_is_rejected()
+        {
+            var patient = NewPatient(bsn: "1112223334"); // 10 digits.
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-05")]
+        public void BSN_with_a_letter_is_rejected()
+        {
+            var patient = NewPatient(bsn: "11122233A");
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-06")]
+        public void Empty_BSN_is_rejected()
+        {
+            var patient = NewPatient(bsn: "");
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-07")]
         public void Duplicate_BSN_is_rejected()
         {
             var bsn = GenerateValidBsn();
@@ -117,7 +185,59 @@ namespace GentleHealersApi.Tests
         }
 
         [TestMethod]
-        [TestCategory("TC-9.1.1-03")]
+        [TestCategory("TC-9.1.1-08")]
+        public void Empty_name_is_rejected()
+        {
+            var patient = NewPatient(firstName: "", lastName: "");
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-09")]
+        public void Empty_email_is_rejected()
+        {
+            var patient = NewPatient(email: "");
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+            Assert.IsFalse(PatientExistsByBsn(patient.Bsn),
+                "No patient should be created when the email address is empty.");
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-10")]
+        public void Invalid_email_format_is_rejected()
+        {
+            var patient = NewPatient(email: "jan.jansen.example.com"); // No '@'.
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+            Assert.IsFalse(PatientExistsByBsn(patient.Bsn),
+                "No patient should be created with an invalid email address.");
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-11")]
+        public void Empty_phone_number_is_rejected()
+        {
+            var patient = NewPatient(phone: "");
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-12")]
         public void Invalid_phone_number_is_rejected()
         {
             // The generated BSN is valid; only the phone number should fail validation.
@@ -132,6 +252,68 @@ namespace GentleHealersApi.Tests
                 "No patient should be created with an invalid phone number.");
 
             _logger.Info("Check passed: patient was not created.");
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-13")]
+        public void Empty_date_of_birth_is_rejected()
+        {
+            var patient = NewPatient(dateOfBirth: "");
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-14")]
+        public void Date_of_birth_in_the_future_is_rejected()
+        {
+            var futureDate = DateTime.Today.AddYears(1).ToString("yyyy-MM-dd");
+            var patient = NewPatient(dateOfBirth: futureDate);
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-15")]
+        public void Empty_form_is_rejected()
+        {
+            // Nothing is filled in; submit the empty form straight away.
+            SubmitForm();
+
+            Assert.IsFalse(IsDisplayed("patient-success"),
+                "No success message should be shown for an empty form.");
+            Assert.IsTrue(_driver.Url.Contains(NewPatientPath),
+                "The user should stay on the add patient page.");
+
+            _logger.Info("Check passed: empty form was not accepted.");
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.1-16")]
+        public void Add_patient_page_is_not_accessible_when_logged_out()
+        {
+            // Log out by removing the session (cookies and browser storage) of the GP.
+            _driver.Manage().Cookies.DeleteAllCookies();
+            ((IJavaScriptExecutor)_driver).ExecuteScript(
+                "window.localStorage.clear(); window.sessionStorage.clear();");
+
+            // Go straight to the add patient page via the URL (full page load,
+            // so the router guard runs again without an authenticated user).
+            _driver.Navigate().GoToUrl(BaseUrl.TrimEnd('/') + NewPatientPath);
+
+            // The router redirects to the login route; the form is never shown.
+            _wait.Until(driver => !driver.Url.Contains(NewPatientPath));
+
+            Assert.IsFalse(_driver.Url.Contains(NewPatientPath),
+                "A logged out user must be redirected away from the add patient page.");
+
+            _logger.Info($"Check passed: redirected to {_driver.Url}");
         }
 
         // ---------------------------------------------------------------
@@ -235,19 +417,93 @@ namespace GentleHealersApi.Tests
             SubmitForm();
             WaitForSuccessMessage("Patiëntaccount succesvol aangemaakt!");
 
-            // The token used by the invitation link in the email is stored in the database.
-            // Verifying the email itself can be done with a mail catcher (e.g., Papercut or MailHog).
-            var tokenCount = Scalar(@"
-                SELECT COUNT(1)
-                FROM dbo.UserToken t
-                INNER JOIN dbo.AppUser u ON u.UserId = t.UserId
-                WHERE u.Email = @Email AND t.Type = 'Activation'",
-                patient.Email,
-                sessionUserId: _gpAccount.UserId);
+            var tokenCount = ActivationTokenCount(patient.Email);
 
             _logger.Info($"Activation token count for {patient.Email}: {tokenCount}");
 
-            Assert.AreEqual(1, Convert.ToInt32(tokenCount));
+            Assert.AreEqual(1, tokenCount);
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.2-05")]
+        public void Invalid_details_create_no_account_and_no_token()
+        {
+            var patient = NewPatient(bsn: "123456789"); // Fails the elfproef check.
+
+            FillForm(patient);
+            SubmitForm();
+
+            AssertRejected(patient);
+
+            Assert.AreEqual(0, ActivationTokenCount(patient.Email),
+                "No activation token may be created for invalid details.");
+
+            _logger.Info("Check passed: no account and no token were created.");
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.2-06")]
+        public void Double_click_on_save_creates_only_one_account()
+        {
+            var patient = NewPatient();
+
+            FillForm(patient);
+
+            // Click twice in quick succession. The second click may hit a disabled
+            // or re-rendered button, which is fine.
+            SubmitForm();
+            try
+            {
+                _addPatientPage.SubmitForm();
+            }
+            catch (WebDriverException ex)
+            {
+                _logger.Info($"Second click could not be performed (expected): {ex.GetType().Name}");
+            }
+
+            WaitForSuccessMessage("Patiëntaccount succesvol aangemaakt!");
+
+            Assert.AreEqual(1, CountPatientsByBsn(patient.Bsn),
+                "Exactly one patient with this BSN must exist.");
+            Assert.AreEqual(1, ActivationTokenCount(patient.Email),
+                "Exactly one invitation (activation token) must exist.");
+
+            _logger.Info("Check passed: only one account was created.");
+        }
+
+        [TestMethod]
+        [TestCategory("TC-9.1.2-07")]
+        public void Gp_from_another_practice_cannot_see_the_new_patient()
+        {
+            // Practice B with its own GP.
+            var practiceB = _practiceFactory.CreatePractice();
+            var gpB = _userFactory.CreateGeneralPractitioner();
+            LinkGpToPractice(gpB.UserId, practiceB.PracticeId);
+
+            // GP of practice A (logged in during setup) creates the patient.
+            var patient = NewPatient();
+            FillForm(patient);
+            SubmitForm();
+            WaitForSuccessMessage("Patiëntaccount succesvol aangemaakt!");
+
+            // Control: the GP of practice A can see the patient.
+            Assert.IsTrue(PatientExists(patient.Email),
+                "The GP of the own practice must be able to see the patient.");
+
+            // The GP of practice B must not see the patient (row-level security).
+            var visibleForGpB = Convert.ToInt32(Scalar(@"
+                SELECT COUNT(1)
+                FROM dbo.Patient p
+                INNER JOIN dbo.AppUser u ON u.UserId = p.UserId
+                WHERE u.Email = @Email",
+                patient.Email,
+                sessionUserId: gpB.UserId));
+
+            _logger.Info(
+                $"Patients with email {patient.Email} visible for GP of practice B: {visibleForGpB}");
+
+            Assert.AreEqual(0, visibleForGpB,
+                "A GP from another practice must not see the patient.");
         }
 
         // ---------------------------------------------------------------
@@ -282,17 +538,36 @@ namespace GentleHealersApi.Tests
 
         private static readonly Random RandomGenerator = new();
 
+        // Everything is generated unless a value is passed in. Passing an empty string
+        // ("") makes that field deliberately empty; null means "generate a value".
         private static PatientTestData NewPatient(
             string? bsn = null,
-            string phone = "0612345678")
+            string? phone = null,
+            string? firstName = null,
+            string? lastName = null,
+            string? email = null,
+            string? dateOfBirth = null)
         {
+            var uniqueId = Guid.NewGuid().ToString("N")[..8];
+
             return new PatientTestData(
-                "Selenium",
-                "Testpatient",
-                $"selenium.{Guid.NewGuid():N}@gentlehealers-test.nl",
+                firstName ?? "Selenium",
+                lastName ?? $"Testpatient{uniqueId}",
+                email ?? $"selenium.{Guid.NewGuid():N}@gentlehealers-test.nl",
                 bsn ?? GenerateValidBsn(),
-                phone,
-                "1985-04-12");
+                phone ?? $"06{RandomGenerator.Next(10000000, 100000000)}",
+                dateOfBirth ?? GenerateDateOfBirth());
+        }
+
+        // Random date of birth in the past, formatted as yyyy-MM-dd.
+        private static string GenerateDateOfBirth()
+        {
+            var date = new DateTime(
+                RandomGenerator.Next(1940, 2006),
+                RandomGenerator.Next(1, 13),
+                RandomGenerator.Next(1, 29));
+
+            return date.ToString("yyyy-MM-dd");
         }
 
         // Generates a random BSN passing the elfproef (must be unique per test run).
@@ -355,6 +630,46 @@ namespace GentleHealersApi.Tests
             _logger.Info($"Success message found: {expectedText}");
         }
 
+        private bool IsDisplayed(string elementId) =>
+            _driver.FindElements(By.Id(elementId)).Any(element => element.Displayed);
+
+        // Generic check for rejected input: use this when the exact error text is not
+        // known (or when the browser itself blocks the submit). To also check the text,
+        // pass expectedError.
+        private void AssertRejected(PatientTestData patient, string? expectedError = null)
+        {
+            if (expectedError is not null)
+            {
+                WaitForErrorMessage(expectedError);
+            }
+            else
+            {
+                try
+                {
+                    new WebDriverWait(_driver, TimeSpan.FromSeconds(3)).Until(driver =>
+                        driver.FindElements(By.Id("patient-error")).Any(element =>
+                            element.Displayed && !string.IsNullOrWhiteSpace(element.Text)));
+
+                    var message = _driver.FindElement(By.Id("patient-error")).Text;
+                    _logger.Info($"Error message shown: \"{message}\"");
+                }
+                catch (WebDriverTimeoutException)
+                {
+                    _logger.Info(
+                        "No message in #patient-error (possibly browser or field validation).");
+                }
+            }
+
+            Assert.IsFalse(IsDisplayed("patient-success"),
+                "No success message may be shown for rejected input.");
+            Assert.IsTrue(_driver.Url.Contains(NewPatientPath),
+                "The user should stay on the add patient page.");
+            Assert.IsFalse(PatientExists(patient.Email),
+                "No patient should be created for rejected input.");
+
+            _logger.Info("Check passed: input was rejected and no patient was created.");
+        }
+
         private void WaitForText(string elementId, string expectedText)
         {
             try
@@ -410,6 +725,27 @@ namespace GentleHealersApi.Tests
                 email,
                 roleName: RoleType.Patient.ToString(),
                 sessionUserId: _gpAccount.UserId)) > 0;
+
+        // Number of patients with this BSN (as seen by the logged in GP).
+        // The BSN is generated digits only, so it is safe to put in the SQL text.
+        private int CountPatientsByBsn(string bsn) =>
+            Convert.ToInt32(Scalar($@"
+                SELECT COUNT(1)
+                FROM dbo.Patient p
+                WHERE p.Bsn = '{bsn}'",
+                email: string.Empty,
+                sessionUserId: _gpAccount.UserId));
+
+        private bool PatientExistsByBsn(string bsn) => CountPatientsByBsn(bsn) > 0;
+
+        private int ActivationTokenCount(string email) =>
+            Convert.ToInt32(Scalar(@"
+                SELECT COUNT(1)
+                FROM dbo.UserToken t
+                INNER JOIN dbo.AppUser u ON u.UserId = t.UserId
+                WHERE u.Email = @Email AND t.Type = 'Activation'",
+                email,
+                sessionUserId: _gpAccount.UserId));
 
         private static object? Scalar(string sql, string email, string? roleName = null, int? sessionUserId = null)
         {

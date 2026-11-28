@@ -8,6 +8,9 @@ using GentleHealersApi.DTOs;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddOpenApi();
+GentleHealersApi.Extensions.TreatmentCodeServiceExtensions.AddTreatmentCodeImport(builder.Services);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueClient", policy =>
@@ -54,6 +57,8 @@ builder.Services.AddScoped<IPatientRegistrationService, PatientRegistrationServi
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
+
 var app = builder.Build();
 
 

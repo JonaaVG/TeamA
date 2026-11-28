@@ -18,6 +18,7 @@ namespace GentleHealersApi.Tests.PageObjects
         public void Login(string identifier, string password)
         {
             var wait = CreateWait();
+            wait.IgnoreExceptionTypes(typeof(StaleElementReferenceException));
 
             // Wait until the email input is visible on the login form
             var emailField = wait.Until(d =>
@@ -37,12 +38,19 @@ namespace GentleHealersApi.Tests.PageObjects
 
             submitBtn.Click();
 
-            // Wait until an error appears, a token is stored, or the email field is no longer visible
+            // The form may be replaced while the router navigates after login.
+            // Do not inspect its elements here; wait only for a stable login outcome.
             wait.Until(driver =>
-                HasErrorMessage()
-                || HasStoredJwtToken(driver)
-                || driver.FindElements(_email).Count(e => e.Displayed) == 0
-            );
+            {
+                try
+                {
+                    return HasStoredJwtToken(driver) || HasErrorMessage();
+                }
+                catch (StaleElementReferenceException)
+                {
+                    return false;
+                }
+            });
         }
 
         public bool HasErrorMessage()

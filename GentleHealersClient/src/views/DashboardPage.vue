@@ -5,7 +5,6 @@
       <h1 id="page-title" tabindex="-1" class="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
         Testing Dashboard
     </h1>
-      
     </BaseCard>
 
     <!-- Dashboard Grid -->
@@ -18,10 +17,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import api from '@/services/api'
 import DataList from '@/components/base/DataList.vue'
-
 // Reactive state for user profile and dashboard widgets
 
 const isLoading = ref(true)
